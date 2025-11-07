@@ -21,14 +21,17 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
-      await dispatch(loginUser(formData));
+      await dispatch(loginUser(formData.email, formData.password));
       toast.success('Login successful!');
       navigate('/');
     } catch (error) {
       setError(error.message || 'Invalid email or password');
       toast.error('Login failed!');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -107,9 +110,10 @@ const Login = () => {
 
           <button 
             type="submit" 
-            className="w-full bg-accent text-btn py-3 rounded-lg hover:bg-accent-hover transition-colors font-semibold"
+            disabled={loading}
+            className="w-full bg-accent text-btn py-3 rounded-lg hover:bg-accent-hover transition-colors font-semibold disabled:opacity-50"
           >
-            Login
+            {loading ? 'Logging in...' : 'Login'}
           </button>
 
           <div className="text-center">
