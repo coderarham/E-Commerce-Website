@@ -17,18 +17,20 @@ const ProductCard = ({ product }) => {
       return;
     }
     
-    dispatch(addToCart(user.id, product, '9'));
+    // Use first available size or default to '9'
+    const defaultSize = product.sizes && product.sizes.length > 0 ? product.sizes[0] : '9';
+    dispatch(addToCart(user.id, product, defaultSize));
     toast.success('Added to cart!');
   };
 
   return (
     <div className="bg-card rounded-lg shadow-md overflow-hidden group">
-      <Link to={`/product/${product.id}`}>
+      <Link to={`/product/${product._id || product.id}`}>
         <div className="relative overflow-hidden">
           <img
             src={product.image || '/images/default-product.png'}
             alt={product.name}
-            className="w-full h-64 object-cover transform group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-64 object-contain transform group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {
               e.target.src = '/images/default-product.png';
             }}

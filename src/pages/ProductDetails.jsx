@@ -18,24 +18,10 @@ const ProductDetails = () => {
   const { items } = useSelector(state => state.products);
 
   useEffect(() => {
-    const foundProduct = items.find(p => p.id === parseInt(id));
+    const foundProduct = items.find(p => p._id === id);
     
     if (foundProduct) {
-      const productWithImages = {
-        ...foundProduct,
-        images: foundProduct.image ? [foundProduct.image] : [
-          "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-        ],
-        originalPrice: foundProduct.price + 50,
-        discount: 25,
-        features: [
-          "Premium quality materials",
-          "Comfortable fit",
-          "Durable construction",
-          "Stylish design"
-        ]
-      };
-      setProduct(productWithImages);
+      setProduct(foundProduct);
     }
     setLoading(false);
   }, [id, items]);
@@ -105,7 +91,7 @@ const ProductDetails = () => {
               <img
                 src={product.images && product.images[selectedImage] ? product.images[selectedImage] : product.image}
                 alt={product.name}
-                className="w-full h-96 object-cover rounded-lg"
+                className="w-full h-96 object-contain rounded-lg"
               />
             </div>
             {product.images && product.images.length > 1 && (
@@ -118,7 +104,7 @@ const ProductDetails = () => {
                       selectedImage === index ? 'border-primary' : 'border-gray-200'
                     }`}
                   >
-                    <img src={image} alt="" className="w-full h-full object-cover" />
+                    <img src={image} alt="" className="w-full h-full object-contain" />
                   </button>
                 ))}
               </div>

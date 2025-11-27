@@ -59,7 +59,7 @@ const Footer = () => {
                 <span className="hero-collection">Collection</span>
               </p>
               <p>Arham Einstein</p>
-              <p>(+91) 12345 67890</p>
+              <p>(+91) 8274890517</p>
             </div>
           </div>
         </div>

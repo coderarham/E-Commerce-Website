@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX, FiSun, FiMoon, FiLogOut } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import { logout } from '../store/authSlice';
+import { logoutUser } from '../store/authSlice';
 import { setSearchTerm } from '../store/productsSlice';
 
 const Navbar = () => {
@@ -37,7 +37,7 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     toast.success('Logged out successfully!');
     navigate('/login');
   };

@@ -262,7 +262,7 @@ const About = () => {
                     <FiPhone className="text-accent flex-shrink-0" />
                     <div>
                       <h4 className="font-semibold">Phone</h4>
-                      <p className="text-secondary">+91 12345 67890</p>
+                      <p className="text-secondary">+91 82748 890517</p>
                     </div>
                   </div>
                   
