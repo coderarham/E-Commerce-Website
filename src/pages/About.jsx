@@ -270,7 +270,7 @@ const About = () => {
                     <FiMail className="text-accent flex-shrink-0" />
                     <div>
                       <h4 className="font-semibold">Email</h4>
-                      <p className="text-secondary">info@shoecollection.com</p>
+                      <p className="text-secondary">shoecollection03@gmail.com</p>
                     </div>
                   </div>
                   
