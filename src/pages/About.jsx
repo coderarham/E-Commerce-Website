@@ -252,7 +252,7 @@ const About = () => {
                       <p className="text-secondary">
                         Shoe Collection Store<br />
                         Block A, Connaught Place<br />
-                        New Delhi, Delhi 110001<br />
+                        Kolkata, West Bengal 700014<br />
                         India
                       </p>
                     </div>
