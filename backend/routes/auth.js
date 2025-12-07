@@ -6,15 +6,15 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    console.log('Registration attempt:', { name, email });
+    const { name, email, password, dateOfBirth, gender } = req.body;
+    console.log('Registration attempt:', { name, email, dateOfBirth, gender });
     
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = new User({ name, email, password });
+    const user = new User({ name, email, password, dateOfBirth, gender });
     await user.save();
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
@@ -24,7 +24,9 @@ router.post('/register', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender
       }
     });
   } catch (error) {
@@ -37,9 +39,21 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Login attempt:', { email, password: password ? 'provided' : 'missing' });
     
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password))) {
+    console.log('User found:', user ? 'yes' : 'no');
+    
+    if (!user) {
+      console.log('User not found for email:', email);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    const passwordMatch = await user.comparePassword(password);
+    console.log('Password match:', passwordMatch);
+    
+    if (!passwordMatch) {
+      console.log('Password does not match');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -57,6 +71,8 @@ router.post('/login', async (req, res) => {
         email: user.email,
         phone: user.phone,
         address: user.address,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
         lastLogin: user.lastLogin
       }
     });

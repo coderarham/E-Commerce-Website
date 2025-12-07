@@ -30,6 +30,15 @@ const userSchema = new mongoose.Schema({
     zipCode: String,
     country: String
   },
+  dateOfBirth: {
+    type: String,
+    trim: true
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other'],
+    trim: true
+  },
   isActive: {
     type: Boolean,
     default: true
