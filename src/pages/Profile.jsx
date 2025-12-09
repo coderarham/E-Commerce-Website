@@ -10,6 +10,8 @@ const Profile = () => {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState({
     name: '',
     phone: '',
@@ -28,7 +30,7 @@ const Profile = () => {
     const fetchUserProfile = async () => {
       if (user?.id) {
         try {
-          const response = await fetch(`http://localhost:5001/api/auth/profile/${user.id}`);
+          const response = await fetch(`http://localhost:5002/api/auth/profile/${user.id}`);
           if (response.ok) {
             const data = await response.json();
             const userData = data.user;
@@ -55,6 +57,26 @@ const Profile = () => {
     fetchUserProfile();
   }, [user]);
 
+  useEffect(() => {
+    if (activeTab === 'orders' && user?.id) {
+      fetchOrders();
+    }
+  }, [activeTab, user]);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5002/api/orders/user/${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+    }
+    setLoading(false);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name.includes('address.')) {
@@ -76,7 +98,7 @@ const Profile = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/auth/profile/${user.id}`, {
+      const response = await fetch(`http://localhost:5002/api/auth/profile/${user.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -394,10 +416,68 @@ const Profile = () => {
                   className="space-y-6"
                 >
                   <h2 className="text-xl font-semibold">Order History</h2>
-                  <div className="text-center py-12">
-                    <FiPackage className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No orders found</p>
-                  </div>
+                  {loading ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    </div>
+                  ) : orders.length > 0 ? (
+                    <div className="space-y-4">
+                      {orders.map((order) => (
+                        <div key={order._id} className="bg-gray-50 rounded-lg p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="font-semibold text-lg">Order #{order._id.slice(-8)}</h3>
+                              <p className="text-gray-600">{new Date(order.orderDate).toLocaleDateString()}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-lg">₹{order.total.toFixed(2)}</p>
+                              <span className={`px-3 py-1 rounded-full text-sm ${
+                                order.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                                order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {order.items.map((item, index) => (
+                              <div key={index} className="flex items-center space-x-4">
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="w-16 h-16 object-cover rounded-lg"
+                                />
+                                <div className="flex-1">
+                                  <h4 className="font-medium">{item.name}</h4>
+                                  <p className="text-gray-600">Size: {item.size} | Qty: {item.quantity}</p>
+                                </div>
+                                <p className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</p>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="mt-4 pt-4 border-t">
+                            <div className="flex justify-between text-sm text-gray-600">
+                              <span>Payment Method:</span>
+                              <span className="capitalize">{order.paymentMethod}</span>
+                            </div>
+                            <div className="flex justify-between text-sm text-gray-600 mt-1">
+                              <span>Shipping Address:</span>
+                              <span>{order.shippingAddress.city}, {order.shippingAddress.state}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <FiPackage className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No orders found</p>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </div>

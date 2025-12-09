@@ -7,14 +7,16 @@ const AdminDashboard = () => {
   const [products, setProducts] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     category: 'men',
+    type: '',
     brand: '',
-    sizes: ['7', '8', '9', '10', '11'],
-    stock: '',
+    customBrand: '',
+    sizes: [],
     images: [null, null, null, null],
     collection: 'latest',
     originalPrice: '',
@@ -28,7 +30,7 @@ const AdminDashboard = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/products');
+      const response = await fetch('http://localhost:5002/api/products');
       const data = await response.json();
       setProducts(data);
     } catch (error) {
@@ -38,7 +40,19 @@ const AdminDashboard = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'category') {
+      // Reset dependent fields when category changes
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: value,
+        type: '',
+        brand: '',
+        customBrand: '',
+        sizes: []
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleImageChange = (index, e) => {
@@ -62,14 +76,21 @@ const AdminDashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validate at least one image is selected for new products
+    if (!editingProduct && !formData.images.some(img => img !== null)) {
+      toast.error('Please select at least one image');
+      return;
+    }
+    
     const formDataToSend = new FormData();
     formDataToSend.append('name', formData.name);
     formDataToSend.append('description', formData.description);
     formDataToSend.append('price', formData.price);
     formDataToSend.append('category', formData.category);
-    formDataToSend.append('brand', formData.brand);
+    formDataToSend.append('type', formData.type);
+    formDataToSend.append('brand', formData.brand === 'Others' ? formData.customBrand : formData.brand);
     formDataToSend.append('sizes', JSON.stringify(formData.sizes));
-    formDataToSend.append('stock', formData.stock);
+    formDataToSend.append('stock', '100'); // Default stock value
     formDataToSend.append('collection', formData.collection);
     formDataToSend.append('originalPrice', formData.originalPrice);
     formDataToSend.append('discount', formData.discount);
@@ -84,8 +105,8 @@ const AdminDashboard = () => {
 
     try {
       const url = editingProduct 
-        ? `http://localhost:5001/api/products/${editingProduct._id}`
-        : 'http://localhost:5001/api/products';
+        ? `http://localhost:5002/api/products/${editingProduct._id}`
+        : 'http://localhost:5002/api/products';
       
       const method = editingProduct ? 'PUT' : 'POST';
       
@@ -103,9 +124,10 @@ const AdminDashboard = () => {
           description: '',
           price: '',
           category: 'men',
+          type: '',
           brand: '',
-          sizes: ['7', '8', '9', '10', '11'],
-          stock: '',
+          customBrand: '',
+          sizes: [],
           images: [null, null, null, null],
           collection: 'latest',
           originalPrice: '',
@@ -115,7 +137,9 @@ const AdminDashboard = () => {
         fetchProducts();
         window.dispatchEvent(new Event('refreshProducts'));
       } else {
-        toast.error('Failed to save product');
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Failed to save product');
+        console.error('Server error:', errorData);
       }
     } catch (error) {
       toast.error('Error saving product');
@@ -124,14 +148,16 @@ const AdminDashboard = () => {
 
   const handleEdit = (product) => {
     setEditingProduct(product);
+    const isCustomBrand = !['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'].includes(product.brand);
     setFormData({
       name: product.name,
       description: product.description,
       price: product.price.toString(),
       category: product.category,
-      brand: product.brand,
+      type: product.type || '',
+      brand: isCustomBrand ? 'Others' : product.brand,
+      customBrand: isCustomBrand ? product.brand : '',
       sizes: product.sizes,
-      stock: product.stock.toString(),
       images: [null, null, null, null],
       collection: product.collection || 'latest',
       originalPrice: product.originalPrice?.toString() || '',
@@ -144,7 +170,7 @@ const AdminDashboard = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        const response = await fetch(`http://localhost:5001/api/products/${id}`, {
+        const response = await fetch(`http://localhost:5002/api/products/${id}`, {
           method: 'DELETE'
         });
         
@@ -164,7 +190,7 @@ const AdminDashboard = () => {
   const handleDeleteAll = async () => {
     if (window.confirm('Are you sure you want to delete ALL products? This cannot be undone!')) {
       try {
-        const response = await fetch('http://localhost:5001/api/products', {
+        const response = await fetch('http://localhost:5002/api/products', {
           method: 'DELETE'
         });
         
@@ -181,7 +207,34 @@ const AdminDashboard = () => {
     }
   };
 
-  const availableSizes = ['6', '7', '8', '9', '10', '11', '12'];
+  const getSizesForCategory = (category) => {
+    switch(category) {
+      case 'men':
+        return ['6', '7', '8', '9', '10', '11', '12'];
+      case 'women':
+        return ['5', '6', '7', '8', '9', '10'];
+      case 'kids':
+        return ['1', '2', '3', '4', '5', '6', '7', '8'];
+      default:
+        return ['6', '7', '8', '9', '10', '11', '12'];
+    }
+  };
+
+  const getTypesForCategory = (category) => {
+    switch(category) {
+      case 'men':
+        return ['Sneakers', 'Formal Shoes', 'Casual Shoes', 'Sports Shoes', 'Boots', 'Loafers'];
+      case 'women':
+        return ['Sneakers', 'High Heels', 'Flats', 'Casual Shoes', 'Boots', 'Sandals'];
+      case 'kids':
+        return ['Sneakers', 'School Shoes', 'Casual Shoes', 'Sports Shoes', 'Sandals', 'Slippers'];
+      
+    }
+  };
+
+  const getBrandsForCategory = (category) => {
+    return ['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'];
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -224,11 +277,40 @@ const AdminDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Stats Cards */}
+        {/* Category Filter */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <div className="bg-white/70 backdrop-blur-lg rounded-xl p-6 border border-white/20 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Filter by Category</h3>
+            <div className="flex flex-wrap gap-3">
+              {['all', 'men', 'women', 'kids'].map(category => (
+                <motion.button
+                  key={category}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                    selectedCategory === category
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  {category === 'all' ? 'All Products' : category.charAt(0).toUpperCase() + category.slice(1)}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
           className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
         >
           <div className="bg-white/70 backdrop-blur-lg rounded-xl p-6 border border-white/20 shadow-lg">
@@ -261,8 +343,8 @@ const AdminDashboard = () => {
           <div className="bg-white/70 backdrop-blur-lg rounded-xl p-6 border border-white/20 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Total Stock</p>
-                <p className="text-2xl font-bold text-gray-800">{products.reduce((sum, p) => sum + p.stock, 0)}</p>
+                <p className="text-gray-600 text-sm">Trending</p>
+                <p className="text-2xl font-bold text-gray-800">{products.filter(p => p.collection === 'trending').length}</p>
               </div>
               <FiEye className="text-purple-500 text-2xl" />
             </div>
@@ -295,15 +377,35 @@ const AdminDashboard = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Brand</label>
-                <input
-                  type="text"
+                <select
                   name="brand"
                   value={formData.brand}
                   onChange={handleInputChange}
                   className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   required
-                />
+                >
+                  <option value="">Select Brand</option>
+                  {getBrandsForCategory(formData.category).map(brand => (
+                    <option key={brand} value={brand}>{brand}</option>
+                  ))}
+                  <option value="Others">Others</option>
+                </select>
               </div>
+
+              {formData.brand === 'Others' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Custom Brand Name</label>
+                  <input
+                    type="text"
+                    name="customBrand"
+                    value={formData.customBrand}
+                    onChange={handleInputChange}
+                    className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Enter brand name"
+                    required
+                  />
+                </div>
+              )}
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
@@ -318,7 +420,7 @@ const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Price ($)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Original Price (₹)</label>
                 <input
                   type="number"
                   name="price"
@@ -344,16 +446,22 @@ const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Stock</label>
-                <input
-                  type="number"
-                  name="stock"
-                  value={formData.stock}
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
+                <select
+                  name="type"
+                  value={formData.type}
                   onChange={handleInputChange}
                   className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   required
-                />
+                >
+                  <option value="">Select Type</option>
+                  {getTypesForCategory(formData.category).map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
               </div>
+
+
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Collection</label>
@@ -370,7 +478,7 @@ const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Original Price ($)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Price (₹)</label>
                 <input
                   type="number"
                   name="originalPrice"
@@ -393,27 +501,29 @@ const AdminDashboard = () => {
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Available Sizes</label>
-                <div className="flex flex-wrap gap-3">
-                  {availableSizes.map(size => (
-                    <motion.button
-                      key={size}
-                      type="button"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleSizeChange(size)}
-                      className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                        formData.sizes.includes(size)
-                          ? 'bg-blue-500 text-white border-blue-500'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300'
-                      }`}
-                    >
-                      {size}
-                    </motion.button>
-                  ))}
+              {formData.category && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Available Sizes</label>
+                  <div className="flex flex-wrap gap-3">
+                    {getSizesForCategory(formData.category).map(size => (
+                      <motion.button
+                        key={size}
+                        type="button"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleSizeChange(size)}
+                        className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                          formData.sizes.includes(size)
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300'
+                        }`}
+                      >
+                        {size}
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Product Images (4 images)</label>
@@ -491,10 +601,12 @@ const AdminDashboard = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.3 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {products.map((product, index) => (
+          {products
+            .filter(product => selectedCategory === 'all' || product.category === selectedCategory)
+            .map((product, index) => (
             <motion.div
               key={product._id}
               initial={{ opacity: 0, y: 20 }}
@@ -555,8 +667,8 @@ const AdminDashboard = () => {
                 <h3 className="font-bold text-lg mb-2 text-gray-800">{product.name}</h3>
                 <p className="text-gray-600 text-sm mb-3">{product.brand}</p>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-2xl font-bold text-green-600">${product.price}</span>
-                  <span className="text-sm text-gray-500">Stock: {product.stock}</span>
+                  <span className="text-2xl font-bold text-green-600">₹{product.price}</span>
+                  <span className="text-sm text-gray-500 capitalize">{product.category}</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {product.sizes?.slice(0, 4).map(size => (
@@ -575,7 +687,7 @@ const AdminDashboard = () => {
           ))}
         </motion.div>
 
-        {products.length === 0 && (
+        {products.filter(product => selectedCategory === 'all' || product.category === selectedCategory).length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

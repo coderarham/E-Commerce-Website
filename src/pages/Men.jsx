@@ -9,6 +9,7 @@ const Men = () => {
   const [openFilters, setOpenFilters] = useState({});
   const [selectedType, setSelectedType] = useState('');
 
+
   // Filter products for men's category
   let menProducts = items.filter(product => product.category === 'men' || product.gender === 'men');
   
@@ -86,6 +87,37 @@ const Men = () => {
                         </button>
                       ))}
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Brand Filter */}
+              <div className="border-b border-main pb-4 mb-4">
+                <button 
+                  onClick={() => toggleFilter('brand')}
+                  className="w-full flex justify-between items-center font-semibold"
+                >
+                  <span>Brand</span>
+                  <span>{openFilters.brand ? '-' : '+'}</span>
+                </button>
+                {openFilters.brand && (
+                  <div className="mt-2 space-y-2">
+                    {['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'].map(brand => (
+                      <label key={brand} className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="h-4 w-4 rounded text-accent focus:ring-accent" 
+                        />
+                        <span className="text-main">{brand}</span>
+                      </label>
+                    ))}
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="h-4 w-4 rounded text-accent focus:ring-accent" 
+                      />
+                      <span className="text-main">Others</span>
+                    </label>
                   </div>
                 )}
               </div>

@@ -140,10 +140,10 @@ const ProductDetails = () => {
             </div>
 
             <div className="flex items-center space-x-4 mb-6">
-              <span className="text-3xl font-bold text-primary">${product.price}</span>
+              <span className="text-3xl font-bold text-primary">₹{product.price}</span>
               {product.originalPrice && (
                 <>
-                  <span className="text-xl text-gray-500 line-through">${product.originalPrice}</span>
+                  <span className="text-xl text-gray-500 line-through">₹{product.originalPrice}</span>
                   <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">
                     -{product.discount}% OFF
                   </span>
@@ -212,7 +212,7 @@ const ProductDetails = () => {
                 <FiTruck className="text-primary" size={24} />
                 <div>
                   <p className="font-semibold">Free Shipping</p>
-                  <p className="text-sm text-gray-600">On orders over $100</p>
+                  <p className="text-sm text-gray-600">On orders over ₹2000</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 p-4 bg-white rounded-lg">

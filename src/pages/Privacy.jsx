@@ -137,9 +137,9 @@ const Privacy = () => {
                 If you have any questions about this Privacy Policy or our data practices, please contact us:
               </p>
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                <p className="text-secondary"><strong>Email:</strong> privacy@shoecollection.com</p>
-                <p className="text-secondary"><strong>Phone:</strong> (+91) 12345 67890</p>
-                <p className="text-secondary"><strong>Address:</strong> Shoe Collection Store, India</p>
+                <p className="text-secondary"><strong>Email:</strong> shoecollection03@gmail.com</p>
+                <p className="text-secondary"><strong>Phone:</strong> (+91) 82748 90517</p>
+                <p className="text-secondary"><strong>Address:</strong> 4/1A, Watgunj Street, Kabitirtha Sarani, Khidirpur, Kolkata, West Bengal 700023, India </p>
               </div>
             </section>
 

@@ -20,7 +20,7 @@ const ProductList = () => {
     footwear: false,
     brand: false
   });
-  const [priceRange, setPriceRangeLocal] = useState([50, 500]);
+  const [priceRange, setPriceRangeLocal] = useState([199, 49999]);
 
   const toggleFilter = (filterName) => {
     setUiFilters(prev => ({
@@ -54,7 +54,7 @@ const ProductList = () => {
 
   const handleClearFilters = () => {
     dispatch(clearFilters());
-    setPriceRangeLocal([50, 500]);
+    setPriceRangeLocal([199, 49999]);
   };
 
   if (loading) {
@@ -86,8 +86,8 @@ const ProductList = () => {
                 <div className="mt-2">
                   <input 
                     type="range" 
-                    min="50" 
-                    max="500" 
+                    min="199" 
+                    max="49999" 
                     value={priceRange[1]} 
                     onChange={handlePriceChange}
                     className="w-full" 
@@ -111,7 +111,7 @@ const ProductList = () => {
               </button>
               {uiFilters.size && (
                 <div className="mt-2 grid grid-cols-4 gap-2 text-center">
-                  {[3,4,5,6,7,8,9,10,11,12].map(size => (
+                  {[6,7,8,9,10,11,12,13].map(size => (
                     <button 
                       key={size} 
                       onClick={() => handleSizeToggle(size)}
@@ -165,7 +165,7 @@ const ProductList = () => {
               </button>
               {uiFilters.brand && (
                 <div className="mt-2 space-y-2">
-                  {['PUMA', 'NIKE', 'ADIDAS', 'BATA', 'CAMPUS', 'PARAGON', 'AJANTA', 'TITAS'].map(brand => (
+                  {['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas',"Aqualite","Relaxo"].map(brand => (
                     <label key={brand} className="flex items-center space-x-2 cursor-pointer">
                       <input 
                         type="checkbox" 

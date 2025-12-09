@@ -1,7 +1,8 @@
+import type { TagDescription } from '@reduxjs/toolkit/query'
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query'
-import { setupApiStore, waitMs } from './helpers'
-import type { TagDescription } from '@reduxjs/toolkit/dist/query/endpointDefinitions'
 import { waitFor } from '@testing-library/react'
+import { delay } from 'msw'
+import { setupApiStore } from '../../tests/utils/helpers'
 
 const tagTypes = [
   'apple',
@@ -12,13 +13,13 @@ const tagTypes = [
   'dog',
   'giraffe',
 ] as const
-type TagTypes = typeof tagTypes[number]
-type Tags = TagDescription<TagTypes>[]
-
+type TagTypes = (typeof tagTypes)[number]
+type ProvidedTags = TagDescription<TagTypes>[] 
+type InvalidatesTags = (ProvidedTags[number] | null | undefined)[]
 /** providesTags, invalidatesTags, shouldInvalidate */
-const caseMatrix: [Tags, Tags, boolean][] = [
+const caseMatrix: [ProvidedTags, InvalidatesTags, boolean][] = [
   // *****************************
-  // basic invalidation behaviour
+  // basic invalidation behavior
   // *****************************
 
   // string
@@ -38,7 +39,11 @@ const caseMatrix: [Tags, Tags, boolean][] = [
   // type + id invalidates type + id
   [[{ type: 'apple', id: 1 }], [{ type: 'apple', id: 1 }], true],
   [[{ type: 'apple', id: 1 }], [{ type: 'apple', id: 2 }], false],
-
+  // null and undefined
+  [['apple'], [null], false],
+  [['apple'], [undefined], false],
+  [['apple'], [null, 'apple'], true],
+  [['apple'], [undefined, 'apple'], true],
   // *****************************
   // test multiple values in array
   // *****************************
@@ -102,7 +107,7 @@ test.each(caseMatrix)(
         }),
       }),
       undefined,
-      { withoutTestLifecycles: true }
+      { withoutTestLifecycles: true },
     )
 
     store.dispatch(providing.initiate())
@@ -110,15 +115,15 @@ test.each(caseMatrix)(
     expect(queryCount).toBe(1)
     await waitFor(() => {
       expect(api.endpoints.providing.select()(store.getState()).status).toBe(
-        'fulfilled'
+        'fulfilled',
       )
       expect(api.endpoints.unrelated.select()(store.getState()).status).toBe(
-        'fulfilled'
+        'fulfilled',
       )
     })
     const toInvalidate = api.util.selectInvalidatedBy(
       store.getState(),
-      invalidatesTags
+      invalidatesTags,
     )
 
     if (shouldInvalidate) {
@@ -135,7 +140,7 @@ test.each(caseMatrix)(
 
     store.dispatch(invalidating.initiate())
     expect(queryCount).toBe(1)
-    await waitMs(2)
+    await delay(2)
     expect(queryCount).toBe(shouldInvalidate ? 2 : 1)
-  }
+  },
 )

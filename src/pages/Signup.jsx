@@ -10,7 +10,9 @@ const Signup = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    dateOfBirth: '',
+    gender: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -35,7 +37,7 @@ const Signup = () => {
     }
 
     try {
-      await dispatch(registerUser(formData.email, formData.password, formData.name));
+      await dispatch(registerUser(formData.email, formData.password, formData.name, formData.dateOfBirth, formData.gender));
       toast.success('Account created successfully!');
       navigate('/');
     } catch (error) {
@@ -95,6 +97,36 @@ const Signup = () => {
                 placeholder="you@example.com" 
                 required 
               />
+            </div>
+
+            <div>
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-secondary mb-2">Date of Birth</label>
+              <input 
+                type="date" 
+                id="dateOfBirth" 
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                className="form-input" 
+                required 
+              />
+            </div>
+
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium text-secondary mb-2">Gender</label>
+              <select 
+                id="gender" 
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className="form-input" 
+                required
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
             </div>
 
 

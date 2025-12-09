@@ -1,16 +1,17 @@
+import { trackForMutations } from '@internal/immutableStateInvariantMiddleware'
+import { noop } from '@internal/listenerMiddleware/utils'
 import type {
-  Store,
-  MiddlewareAPI,
-  Dispatch,
   ImmutableStateInvariantMiddlewareOptions,
+  Middleware,
+  MiddlewareAPI,
+  Store,
 } from '@reduxjs/toolkit'
 import {
   createImmutableStateInvariantMiddleware,
   isImmutableDefault,
 } from '@reduxjs/toolkit'
 
-import { trackForMutations } from '@internal/immutableStateInvariantMiddleware'
-import { mockConsole, createConsole, getLog } from 'console-testing-library'
+type MWNext = Parameters<ReturnType<Middleware>>[0]
 
 describe('createImmutableStateInvariantMiddleware', () => {
   let state: { foo: { bar: number[]; baz: string } }
@@ -27,17 +28,17 @@ describe('createImmutableStateInvariantMiddleware', () => {
   })
 
   it('sends the action through the middleware chain', () => {
-    const next: Dispatch = (action) => ({ ...action, returned: true })
+    const next: MWNext = vi.fn()
     const dispatch = middleware()(next)
+    dispatch({ type: 'SOME_ACTION' })
 
-    expect(dispatch({ type: 'SOME_ACTION' })).toEqual({
+    expect(next).toHaveBeenCalledWith({
       type: 'SOME_ACTION',
-      returned: true,
     })
   })
 
   it('throws if mutating inside the dispatch', () => {
-    const next: Dispatch = (action) => {
+    const next: MWNext = (action) => {
       state.foo.bar.push(5)
       return action
     }
@@ -50,7 +51,7 @@ describe('createImmutableStateInvariantMiddleware', () => {
   })
 
   it('throws if mutating between dispatches', () => {
-    const next: Dispatch = (action) => action
+    const next: MWNext = (action) => action
 
     const dispatch = middleware()(next)
 
@@ -62,7 +63,7 @@ describe('createImmutableStateInvariantMiddleware', () => {
   })
 
   it('does not throw if not mutating inside the dispatch', () => {
-    const next: Dispatch = (action) => {
+    const next: MWNext = (action) => {
       state = { ...state, foo: { ...state.foo, baz: 'changed!' } }
       return action
     }
@@ -75,7 +76,7 @@ describe('createImmutableStateInvariantMiddleware', () => {
   })
 
   it('does not throw if not mutating between dispatches', () => {
-    const next: Dispatch = (action) => action
+    const next: MWNext = (action) => action
 
     const dispatch = middleware()(next)
 
@@ -87,7 +88,7 @@ describe('createImmutableStateInvariantMiddleware', () => {
   })
 
   it('works correctly with circular references', () => {
-    const next: Dispatch = (action) => action
+    const next: MWNext = (action) => action
 
     const dispatch = middleware()(next)
 
@@ -103,7 +104,7 @@ describe('createImmutableStateInvariantMiddleware', () => {
 
   it('respects "isImmutable" option', function () {
     const isImmutable = (value: any) => true
-    const next: Dispatch = (action) => {
+    const next: MWNext = (action) => {
       state.foo.bar.push(5)
       return action
     }
@@ -116,7 +117,7 @@ describe('createImmutableStateInvariantMiddleware', () => {
   })
 
   it('respects "ignoredPaths" option', () => {
-    const next: Dispatch = (action) => {
+    const next: MWNext = (action) => {
       state.foo.bar.push(5)
       return action
     }
@@ -134,39 +135,32 @@ describe('createImmutableStateInvariantMiddleware', () => {
     }).not.toThrow()
   })
 
-  it('alias "ignore" to "ignoredPath" and respects option', () => {
-    const next: Dispatch = (action) => {
-      state.foo.bar.push(5)
-      return action
-    }
-
-    const dispatch = middleware({ ignore: ['foo.bar'] })(next)
-
-    expect(() => {
-      dispatch({ type: 'SOME_ACTION' })
-    }).not.toThrow()
-  })
-
   it('Should print a warning if execution takes too long', () => {
     state.foo.bar = new Array(10000).fill({ value: 'more' })
 
-    const next: Dispatch = (action) => action
+    const next: MWNext = (action) => action
 
     const dispatch = middleware({ warnAfter: 4 })(next)
 
-    const restore = mockConsole(createConsole())
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(noop)
+
     try {
       dispatch({ type: 'SOME_ACTION' })
-      expect(getLog().log).toMatch(
-        /^ImmutableStateInvariantMiddleware took \d*ms, which is more than the warning threshold of 4ms./
+
+      expect(consoleWarnSpy).toHaveBeenCalledOnce()
+
+      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+        expect.stringMatching(
+          /^ImmutableStateInvariantMiddleware took \d*ms, which is more than the warning threshold of 4ms./,
+        ),
       )
     } finally {
-      restore()
+      consoleWarnSpy.mockRestore()
     }
   })
 
   it('Should not print a warning if "next" takes too long', () => {
-    const next: Dispatch = (action) => {
+    const next: MWNext = (action) => {
       const started = Date.now()
       while (Date.now() - started < 8) {}
       return action
@@ -174,12 +168,14 @@ describe('createImmutableStateInvariantMiddleware', () => {
 
     const dispatch = middleware({ warnAfter: 4 })(next)
 
-    const restore = mockConsole(createConsole())
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(noop)
+
     try {
       dispatch({ type: 'SOME_ACTION' })
-      expect(getLog().log).toEqual('')
+
+      expect(consoleWarnSpy).not.toHaveBeenCalled()
     } finally {
-      restore()
+      consoleWarnSpy.mockRestore()
     }
   })
 })

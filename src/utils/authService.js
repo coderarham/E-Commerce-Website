@@ -1,13 +1,13 @@
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = 'http://localhost:5002/api';
 
 export const authService = {
   // Register with email and password
-  register: async (email, password, name) => {
+  register: async (email, password, name, dateOfBirth, gender) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, dateOfBirth, gender })
       });
       
       if (!response.ok) {
