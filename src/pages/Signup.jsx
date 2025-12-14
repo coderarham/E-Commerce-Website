@@ -11,8 +11,7 @@ const Signup = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    dateOfBirth: '',
-    gender: ''
+    phone: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -37,7 +36,7 @@ const Signup = () => {
     }
 
     try {
-      await dispatch(registerUser(formData.email, formData.password, formData.name, formData.dateOfBirth, formData.gender));
+      await dispatch(registerUser(formData.email, formData.password, formData.name, formData.phone));
       toast.success('Account created successfully!');
       navigate('/');
     } catch (error) {
@@ -100,33 +99,19 @@ const Signup = () => {
             </div>
 
             <div>
-              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-secondary mb-2">Date of Birth</label>
+              <label htmlFor="phone" className="block text-sm font-medium text-secondary mb-2">Phone Number</label>
               <input 
-                type="date" 
-                id="dateOfBirth" 
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
+                type="tel" 
+                id="phone" 
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
                 className="form-input" 
+                placeholder="9876543210" 
+                pattern="[0-9]{10}"
+                maxLength="10"
                 required 
               />
-            </div>
-
-            <div>
-              <label htmlFor="gender" className="block text-sm font-medium text-secondary mb-2">Gender</label>
-              <select 
-                id="gender" 
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="form-input" 
-                required
-              >
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
             </div>
 
 

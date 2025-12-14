@@ -119,7 +119,14 @@ const Checkout = () => {
         // Clear cart from frontend
         dispatch(clearCart());
         setShowOTP(false);
-        navigate('/order-confirmation');
+        
+        // Trigger event for admin panel to refresh orders
+        window.dispatchEvent(new CustomEvent('newOrderPlaced'));
+        
+        // Navigate to order confirmation with success state
+        navigate('/order-confirmation', { 
+          state: { orderSuccess: true }
+        });
       }
     } catch (error) {
       console.error('Order creation failed:', error);

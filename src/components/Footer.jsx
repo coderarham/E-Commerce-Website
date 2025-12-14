@@ -58,8 +58,8 @@ const Footer = () => {
                 <span className="hero-shoe">Shoe </span>
                 <span className="hero-collection">Collection</span>
               </p>
-              <p>Arham Einstein</p>
-              <p>(+91) 8274890517</p>
+              <p>Md Arham</p>
+              <p>(+91) 82748 90517</p>
             </div>
           </div>
         </div>

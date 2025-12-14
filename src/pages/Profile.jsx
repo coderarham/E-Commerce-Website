@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiHeart, FiPackage, FiEdit, FiSave } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiHeart, FiPackage, FiEdit, FiSave, FiEye, FiDownload } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { logout } from '../store/authSlice';
 
@@ -35,8 +35,8 @@ const Profile = () => {
             const data = await response.json();
             const userData = data.user;
             setProfileData({
-              name: userData.name || '',
-              phone: userData.phone || '',
+              name: userData.name || user.name || '',
+              phone: userData.phone || user.phone || '',
               address: userData.address || {
                 street: '',
                 city: '',
@@ -120,6 +120,123 @@ const Profile = () => {
   const handleLogout = () => {
     dispatch(logout());
     toast.success('Logged out successfully!');
+  };
+
+  const viewInvoice = (order) => {
+    const invoiceWindow = window.open('', '_blank');
+    const invoiceHTML = generateInvoiceHTML(order);
+    invoiceWindow.document.write(invoiceHTML);
+    invoiceWindow.document.close();
+  };
+
+  const downloadInvoice = (order) => {
+    const invoiceHTML = generateInvoiceHTML(order);
+    const blob = new Blob([invoiceHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoice-${order._id.slice(-8)}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const generateInvoiceHTML = (order) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice - ${order._id.slice(-8)}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+          .company-name { font-size: 28px; font-weight: bold; color: #333; }
+          .invoice-title { font-size: 24px; color: #666; margin-top: 10px; }
+          .order-info { margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 5px; }
+          .customer-info { margin-bottom: 20px; }
+          .table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          .table th, .table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          .table th { background-color: #f2f2f2; font-weight: bold; }
+          .total-section { text-align: right; margin-top: 20px; }
+          .total { font-weight: bold; font-size: 18px; color: #333; }
+          .status { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+          .status-pending { background: #fef3cd; color: #856404; }
+          .status-confirmed { background: #d1edff; color: #0c5460; }
+          .status-processing { background: #fff3cd; color: #856404; }
+          .status-shipped { background: #cce5ff; color: #004085; }
+          .status-delivered { background: #d4edda; color: #155724; }
+          .status-cancelled { background: #f8d7da; color: #721c24; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="company-name">SHOE COLLECTION</div>
+          <div class="invoice-title">INVOICE</div>
+        </div>
+        
+        <div class="order-info">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <p><strong>Invoice #:</strong> INV-${order._id.slice(-8)}</p>
+              <p><strong>Order ID:</strong> ${order._id.slice(-8)}</p>
+              <p><strong>Date:</strong> ${new Date(order.orderDate).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <span class="status status-${order.status}">${order.status.toUpperCase()}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="customer-info">
+          <h3>Bill To:</h3>
+          <p><strong>${order.shippingAddress.firstName} ${order.shippingAddress.lastName}</strong></p>
+          <p>${order.shippingAddress.email}</p>
+          <p>${order.shippingAddress.phone}</p>
+          <p>${order.shippingAddress.address}</p>
+          <p>${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}</p>
+        </div>
+        
+        <h3>Order Items:</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Size</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${order.items.map(item => `
+              <tr>
+                <td>${item.name}</td>
+                <td>${item.size}</td>
+                <td>${item.quantity}</td>
+                <td>₹${item.price.toFixed(2)}</td>
+                <td>₹${(item.quantity * item.price).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div class="total-section">
+          <p>Subtotal: ₹${(order.subtotal || order.total).toFixed(2)}</p>
+          <p>Shipping: ₹${(order.shipping || 0).toFixed(2)}</p>
+          <p>Tax: ₹${(order.tax || 0).toFixed(2)}</p>
+          <div class="total">
+            <p>Total Amount: ₹${order.total.toFixed(2)}</p>
+          </div>
+        </div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666;">
+          <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+          <p>Thank you for shopping with Shoe Collection!</p>
+        </div>
+      </body>
+      </html>
+    `;
   };
 
   return (
@@ -431,14 +548,6 @@ const Profile = () => {
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-lg">₹{order.total.toFixed(2)}</p>
-                              <span className={`px-3 py-1 rounded-full text-sm ${
-                                order.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                              </span>
                             </div>
                           </div>
                           
@@ -467,6 +576,38 @@ const Profile = () => {
                             <div className="flex justify-between text-sm text-gray-600 mt-1">
                               <span>Shipping Address:</span>
                               <span>{order.shippingAddress.city}, {order.shippingAddress.state}</span>
+                            </div>
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                              <div className="text-sm text-gray-600">
+                                <span>Order Status: </span>
+                                <span className={`font-medium ${
+                                  order.status === 'pending' ? 'text-orange-600' :
+                                  order.status === 'confirmed' ? 'text-green-600' :
+                                  order.status === 'processing' ? 'text-yellow-600' :
+                                  order.status === 'shipped' ? 'text-blue-600' :
+                                  order.status === 'delivered' ? 'text-green-600' :
+                                  order.status === 'cancelled' ? 'text-red-600' :
+                                  'text-gray-600'
+                                }`}>
+                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                </span>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => viewInvoice(order)}
+                                  className="flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm transition-colors"
+                                >
+                                  <FiEye className="w-4 h-4" />
+                                  <span>View Invoice</span>
+                                </button>
+                                <button
+                                  onClick={() => downloadInvoice(order)}
+                                  className="flex items-center space-x-1 px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 text-sm transition-colors"
+                                >
+                                  <FiDownload className="w-4 h-4" />
+                                  <span>Download</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>

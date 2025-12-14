@@ -37,4 +37,37 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
+// Get all orders (for admin)
+router.get('/', async (req, res) => {
+  try {
+    const orders = await Order.find({})
+      .sort({ orderDate: -1 })
+      .populate('userId', 'name email')
+      .populate('items.productId');
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update order status (for admin)
+router.put('/:orderId/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findByIdAndUpdate(
+      req.params.orderId,
+      { status },
+      { new: true }
+    );
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    res.json({ message: 'Order status updated', order });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

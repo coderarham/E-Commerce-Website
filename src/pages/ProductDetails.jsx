@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { FiStar, FiShoppingCart, FiHeart, FiTruck, FiShield, FiRotateCcw } from 'react-icons/fi';
+import { FiStar, FiShoppingCart, FiHeart, FiTruck, FiShield, FiRotateCcw, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { addToCart } from '../store/cartSlice';
 
@@ -12,6 +12,7 @@ const ProductDetails = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedImage, setSelectedImage] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [accordionOpen, setAccordionOpen] = useState({ specifications: true, shipping: false, features: false });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector(state => state.auth);
@@ -95,7 +96,7 @@ const ProductDetails = () => {
               />
             </div>
             {product.images && product.images.length > 1 && (
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 mb-6">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
@@ -109,6 +110,31 @@ const ProductDetails = () => {
                 ))}
               </div>
             )}
+            
+            {/* Service Info Cards - Left Side */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3 p-4 bg-white rounded-lg">
+                <FiTruck className="text-primary" size={24} />
+                <div>
+                  <p className="font-semibold">Free Shipping</p>
+                  <p className="text-sm text-gray-600">On orders over ₹499</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-4 bg-white rounded-lg">
+                <FiShield className="text-primary" size={24} />
+                <div>
+                  <p className="font-semibold">Warranty</p>
+                  <p className="text-sm text-gray-600">6 months warranty</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-4 bg-white rounded-lg">
+                <FiRotateCcw className="text-primary" size={24} />
+                <div>
+                  <p className="font-semibold">Returns</p>
+                  <p className="text-sm text-gray-600">15-day returns</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Product Info */}
@@ -140,12 +166,12 @@ const ProductDetails = () => {
             </div>
 
             <div className="flex items-center space-x-4 mb-6">
-              <span className="text-3xl font-bold text-primary">₹{product.price}</span>
-              {product.originalPrice && (
+              <span className="text-3xl font-bold text-primary">₹{product.price || product.salePrice}</span>
+              {(product.originalPrice || product.mrp) && (
                 <>
-                  <span className="text-xl text-gray-500 line-through">₹{product.originalPrice}</span>
+                  <span className="text-xl text-gray-500 line-through">₹{product.originalPrice || product.mrp}</span>
                   <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">
-                    -{product.discount}% OFF
+                    -{Math.round(((product.mrp - product.salePrice) / product.mrp) * 100)}% OFF
                   </span>
                 </>
               )}
@@ -157,7 +183,7 @@ const ProductDetails = () => {
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-3">Size</h3>
               <div className="grid grid-cols-6 gap-2">
-                {product.sizes.map(size => (
+                {(product.sizes || product.variants?.sizes || []).map(size => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
@@ -174,7 +200,7 @@ const ProductDetails = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-4 mb-8">
+            <div className="flex space-x-4 mb-6">
               <button
                 onClick={handleAddToCart}
                 className="flex-1 bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-gray-900 transition flex items-center justify-center space-x-2"
@@ -193,43 +219,86 @@ const ProductDetails = () => {
               </button>
             </div>
 
-            {/* Features */}
-            <div className="bg-white rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold mb-4">Features</h3>
-              <ul className="space-y-2">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-center text-gray-600">
-                    <span className="w-2 h-2 bg-primary rounded-full mr-3"></span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+
+
+            {/* Specifications Section */}
+            <div className="bg-white rounded-lg border mb-6">
+              <div className="p-4 font-semibold text-gray-800">
+                <span>SPECIFICATIONS</span>
+              </div>
+              <div className="px-4 pb-4">
+                <table className="w-full">
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="py-2 px-3 font-medium text-gray-700">Type</td>
+                      <td className="py-2 px-3 text-gray-600">{product.type || 'Shoes'}</td>
+                    </tr>
+                    <tr className="bg-white">
+                      <td className="py-2 px-3 font-medium text-gray-700">Brand</td>
+                      <td className="py-2 px-3 text-gray-600">{product.brand || 'PUMA'}</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="py-2 px-3 font-medium text-gray-700">Category</td>
+                      <td className="py-2 px-3 text-gray-600">{product.category || 'men'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            {/* Shipping Info */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center space-x-3 p-4 bg-white rounded-lg">
-                <FiTruck className="text-primary" size={24} />
-                <div>
-                  <p className="font-semibold">Free Shipping</p>
-                  <p className="text-sm text-gray-600">On orders over ₹2000</p>
+            {/* Features */}
+            <div className="bg-white rounded-lg border mb-6">
+              <button
+                onClick={() => setAccordionOpen(prev => ({ ...prev, features: !prev.features }))}
+                className="w-full flex items-center justify-between p-4 text-left font-semibold text-gray-800 hover:bg-gray-50"
+              >
+                <span>Features</span>
+                {accordionOpen.features ? <FiChevronUp /> : <FiChevronDown />}
+              </button>
+              {accordionOpen.features && (
+                <div className="px-4 pb-4">
+                  <ul className="space-y-2">
+                    {(product.features && product.features.length > 0) ? (
+                      product.features.map((feature, index) => (
+                        <li key={index} className="flex items-center text-gray-600">
+                          <span className="w-2 h-2 bg-primary rounded-full mr-3"></span>
+                          {feature}
+                        </li>
+                      ))
+                    ) : (
+                      ['Premium quality materials', 'Comfortable fit', 'Durable construction', 'Stylish design'].map((feature, index) => (
+                        <li key={index} className="flex items-center text-gray-600">
+                          <span className="w-2 h-2 bg-primary rounded-full mr-3"></span>
+                          {feature}
+                        </li>
+                      ))
+                    )}
+                  </ul>
                 </div>
-              </div>
-              <div className="flex items-center space-x-3 p-4 bg-white rounded-lg">
-                <FiShield className="text-primary" size={24} />
-                <div>
-                  <p className="font-semibold">Warranty</p>
-                  <p className="text-sm text-gray-600">1 year warranty</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 p-4 bg-white rounded-lg">
-                <FiRotateCcw className="text-primary" size={24} />
-                <div>
-                  <p className="font-semibold">Returns</p>
-                  <p className="text-sm text-gray-600">30-day returns</p>
-                </div>
+              )}
+            </div>
+
+            {/* Accordion Information Section */}
+            <div className="space-y-4">
+
+              {/* Shipping Section */}
+              <div className="bg-white rounded-lg border">
+                <button
+                  onClick={() => setAccordionOpen(prev => ({ ...prev, shipping: !prev.shipping }))}
+                  className="w-full flex items-center justify-between p-4 text-left font-semibold text-gray-800 hover:bg-gray-50"
+                >
+                  <span>SHIPPING</span>
+                  {accordionOpen.shipping ? <FiChevronUp /> : <FiChevronDown />}
+                </button>
+                {accordionOpen.shipping && (
+                  <div className="px-4 pb-4">
+                    <p className="text-gray-600">Free shipping on order above Rs. 499</p>
+                  </div>
+                )}
               </div>
             </div>
+
+
           </div>
         </motion.div>
       </div>

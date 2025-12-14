@@ -29,45 +29,45 @@ const HomeProductList = () => {
       {/* Product Collections */}
       <div className="space-y-16">
         {/* Latest Collection */}
-        {filteredItems.filter(product => product.collection === 'latest').length > 0 && (
+        {filteredItems.filter(product => product.collection === 'latest' || product.collection === 'Latest Collection').length > 0 && (
           <div>
             <div className="text-center mb-8">
               <div className="w-full h-px bg-accent mx-auto mb-4"></div>
               <h2 className="text-3xl font-bold text-main">Latest Collection</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              {filteredItems.filter(product => product.collection === 'latest').slice(0, 8).map(product => (
-                <ProductCard key={product._id} product={product} />
+              {filteredItems.filter(product => product.collection === 'latest' || product.collection === 'Latest Collection').slice(0, 8).map(product => (
+                <ProductCard key={product._id || product.id} product={product} />
               ))}
             </div>
           </div>
         )}
 
         {/* Best Seller */}
-        {filteredItems.filter(product => product.collection === 'bestseller').length > 0 && (
+        {filteredItems.filter(product => product.collection === 'bestseller' || product.collection === 'Best Selling').length > 0 && (
           <div>
             <div className="text-center mb-8">
               <div className="w-full h-px bg-accent mx-auto mb-4"></div>
               <h2 className="text-3xl font-bold text-main">Best Seller</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              {filteredItems.filter(product => product.collection === 'bestseller').slice(0, 8).map(product => (
-                <ProductCard key={product._id} product={product} />
+              {filteredItems.filter(product => product.collection === 'bestseller' || product.collection === 'Best Selling').slice(0, 8).map(product => (
+                <ProductCard key={product._id || product.id} product={product} />
               ))}
             </div>
           </div>
         )}
 
         {/* Trending */}
-        {filteredItems.filter(product => product.collection === 'trending').length > 0 && (
+        {filteredItems.filter(product => product.collection === 'trending' || product.collection === 'Trending').length > 0 && (
           <div>
             <div className="text-center mb-8">
               <div className="w-full h-px bg-accent mx-auto mb-4"></div>
               <h2 className="text-3xl font-bold text-main">Trending</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-              {filteredItems.filter(product => product.collection === 'trending').slice(0, 8).map(product => (
-                <ProductCard key={product._id} product={product} />
+              {filteredItems.filter(product => product.collection === 'trending' || product.collection === 'Trending').slice(0, 8).map(product => (
+                <ProductCard key={product._id || product.id} product={product} />
               ))}
             </div>
           </div>

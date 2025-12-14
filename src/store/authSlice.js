@@ -33,10 +33,10 @@ const authSlice = createSlice({
 });
 
 // Async actions
-export const registerUser = (email, password, name, dateOfBirth, gender) => async (dispatch) => {
+export const registerUser = (email, password, name, phone) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
-    const response = await authService.register(email, password, name, dateOfBirth, gender);
+    const response = await authService.register(email, password, name, phone);
     dispatch(setUser(response));
     return response;
   } catch (error) {

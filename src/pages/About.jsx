@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { FiMapPin, FiPhone, FiMail, FiClock, FiLock } from 'react-icons/fi';
+import { emailService } from '../utils/emailService';
+import { toast } from 'react-toastify';
 
 const About = () => {
   const location = useLocation();
@@ -36,20 +38,35 @@ const About = () => {
   const [showContactSuccess, setShowContactSuccess] = useState(false);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
 
-  const handleFeedbackSubmit = (e) => {
+  const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
     
     if (!isAuthenticated) {
-      alert('Please login to send feedback');
+      toast.error('Please login to send feedback');
       return;
     }
     
     setIsSubmittingFeedback(true);
     
-    setTimeout(() => {
+    try {
+      const success = await emailService.sendFeedback({
+        name: feedbackForm.name,
+        email: feedbackForm.email,
+        rating: feedbackForm.rating,
+        feedback: feedbackForm.message
+      });
+      
+      if (success) {
+        setShowFeedbackSuccess(true);
+        toast.success('Feedback sent successfully!');
+      } else {
+        toast.error('Failed to send feedback. Please try again.');
+      }
+    } catch (error) {
+      toast.error('Error sending feedback. Please try again.');
+    } finally {
       setIsSubmittingFeedback(false);
-      setShowFeedbackSuccess(true);
-    }, 1500);
+    }
   };
 
   const resetFeedbackForm = () => {
@@ -57,20 +74,35 @@ const About = () => {
     setShowFeedbackSuccess(false);
   };
 
-  const handleContactSubmit = (e) => {
+  const handleContactSubmit = async (e) => {
     e.preventDefault();
     
     if (!isAuthenticated) {
-      alert('Please login to send message');
+      toast.error('Please login to send message');
       return;
     }
     
     setIsSubmittingContact(true);
     
-    setTimeout(() => {
+    try {
+      const success = await emailService.sendContactMessage({
+        name: contactForm.name,
+        email: contactForm.email,
+        subject: contactForm.subject,
+        message: contactForm.message
+      });
+      
+      if (success) {
+        setShowContactSuccess(true);
+        toast.success('Message sent successfully!');
+      } else {
+        toast.error('Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      toast.error('Error sending message. Please try again.');
+    } finally {
       setIsSubmittingContact(false);
-      setShowContactSuccess(true);
-    }, 1500);
+    }
   };
 
   const resetContactForm = () => {

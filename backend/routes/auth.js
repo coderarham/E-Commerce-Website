@@ -6,15 +6,15 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, dateOfBirth, gender } = req.body;
-    console.log('Registration attempt:', { name, email, dateOfBirth, gender });
+    const { name, email, password, phone, dateOfBirth, gender } = req.body;
+    console.log('Registration attempt:', { name, email, phone, dateOfBirth, gender });
     
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = new User({ name, email, password, dateOfBirth, gender });
+    const user = new User({ name, email, password, phone, dateOfBirth, gender });
     await user.save();
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
@@ -25,6 +25,7 @@ router.post('/register', async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         dateOfBirth: user.dateOfBirth,
         gender: user.gender
       }
@@ -122,6 +123,36 @@ router.put('/profile/:userId', async (req, res) => {
         gender: user.gender
       }
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get all users (for admin)
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.find({}).select('-password');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update user status (for admin)
+router.put('/users/:userId', async (req, res) => {
+  try {
+    const { isActive } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
+      { isActive },
+      { new: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({ message: 'User status updated', user });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

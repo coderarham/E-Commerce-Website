@@ -195,7 +195,7 @@ const ProductList = () => {
         <div className="lg:col-span-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {filteredItems.map(product => (
-              <ProductCard key={product._id} product={product} />
+              <ProductCard key={product._id || product.id} product={product} />
             ))}
             {filteredItems.length === 0 && (
               <div className="col-span-full text-center py-12">

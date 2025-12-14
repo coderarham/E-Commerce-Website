@@ -26,11 +26,11 @@ const Men = React.lazy(() => import('./pages/Men'));
 const Women = React.lazy(() => import('./pages/Women'));
 const Kids = React.lazy(() => import('./pages/Kids'));
 const About = React.lazy(() => import('./pages/About'));
-const Admin = React.lazy(() => import('./pages/Admin'));
-const AdminDashboard = React.lazy(() => import('./admin/pages/AdminDashboard'));
+const AdminPanel = React.lazy(() => import('./admin/AdminPanel'));
 const Terms = React.lazy(() => import('./pages/Terms'));
 const Privacy = React.lazy(() => import('./pages/Privacy'));
 const ReturnPolicy = React.lazy(() => import('./pages/ReturnPolicy'));
+const OrderConfirmation = React.lazy(() => import('./pages/OrderConfirmation'));
 
 // Route wrapper component for animations
 const AnimatedRoute = ({ children }) => {
@@ -124,15 +124,10 @@ function AppContent() {
                   <About />
                 </AnimatedRoute>
               } />
-              <Route path="/admin" element={
-                <AnimatedRoute>
-                  <Admin />
-                </AnimatedRoute>
-              } />
-              <Route path="/admin/dashboard" element={
+              <Route path="/admin/*" element={
                 <ProtectedRoute>
                   <AnimatedRoute>
-                    <AdminDashboard />
+                    <AdminPanel />
                   </AnimatedRoute>
                 </ProtectedRoute>
               } />
@@ -182,6 +177,13 @@ function AppContent() {
                 <ProtectedRoute>
                   <AnimatedRoute>
                     <Profile />
+                  </AnimatedRoute>
+                </ProtectedRoute>
+              } />
+              <Route path="/order-confirmation" element={
+                <ProtectedRoute>
+                  <AnimatedRoute>
+                    <OrderConfirmation />
                   </AnimatedRoute>
                 </ProtectedRoute>
               } />

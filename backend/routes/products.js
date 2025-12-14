@@ -41,21 +41,30 @@ router.post('/', upload, async (req, res) => {
     const imageUrls = [];
     
     // Upload all images to Cloudinary
+    console.log('Starting Cloudinary upload process...');
     for (let i = 0; i < 4; i++) {
       const imageField = `image${i}`;
       if (req.files && req.files[imageField] && req.files[imageField][0]) {
+        console.log(`Uploading image ${i} to Cloudinary...`);
         const result = await new Promise((resolve, reject) => {
           cloudinary.uploader.upload_stream(
             { folder: 'ecommerce/products' },
             (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
+              if (error) {
+                console.error(`Cloudinary upload error for image ${i}:`, error);
+                reject(error);
+              } else {
+                console.log(`✅ Image ${i} uploaded successfully:`, result.secure_url);
+                resolve(result);
+              }
             }
           ).end(req.files[imageField][0].buffer);
         });
         imageUrls.push(result.secure_url);
       }
     }
+    console.log(`Total images uploaded: ${imageUrls.length}`);
+    console.log('All image URLs:', imageUrls);
     
     // Require at least one image
     if (imageUrls.length === 0) {
@@ -79,6 +88,9 @@ router.post('/', upload, async (req, res) => {
     });
     
     await product.save();
+    console.log('✅ Product saved to MongoDB:', product.name);
+    console.log('Product ID:', product._id);
+    console.log('Main image URL:', product.image);
     res.status(201).json(product);
   } catch (error) {
     console.error('Add product error:', error);

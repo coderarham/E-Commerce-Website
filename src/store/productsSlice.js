@@ -21,8 +21,18 @@ const productsSlice = createSlice({
   },
   reducers: {
     setProducts: (state, action) => {
-      state.items = action.payload;
-      state.filteredItems = action.payload;
+      // Normalize products to ensure all required fields exist
+      const normalizedProducts = action.payload.map(product => ({
+        ...product,
+        price: product.price || product.salePrice,
+        image: product.image || product.image1 || product.images?.[0],
+        _id: product._id || product.id,
+        category: product.category?.toLowerCase() || 'all',
+        sizes: product.sizes || [],
+        collection: product.collection || 'general'
+      }));
+      state.items = normalizedProducts;
+      state.filteredItems = normalizedProducts;
       state.loading = false;
     },
     setLoading: (state, action) => {
@@ -30,17 +40,23 @@ const productsSlice = createSlice({
     },
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload;
-      state.filteredItems = state.items.filter(product =>
-        product.name.toLowerCase().includes(action.payload.toLowerCase()) &&
-        (state.selectedCategory === 'All' || product.category === state.selectedCategory)
-      );
+      state.filteredItems = state.items.filter(product => {
+        const searchMatch = product.name.toLowerCase().includes(action.payload.toLowerCase());
+        const categoryMatch = state.selectedCategory === 'All' || 
+          product.category === state.selectedCategory.toLowerCase() ||
+          product.category === state.selectedCategory;
+        return searchMatch && categoryMatch;
+      });
     },
     setCategory: (state, action) => {
       state.selectedCategory = action.payload;
-      state.filteredItems = state.items.filter(product =>
-        (action.payload === 'All' || product.category === action.payload) &&
-        product.name.toLowerCase().includes(state.searchTerm.toLowerCase())
-      );
+      state.filteredItems = state.items.filter(product => {
+        const categoryMatch = action.payload === 'All' || 
+          product.category === action.payload.toLowerCase() ||
+          product.category === action.payload;
+        const searchMatch = product.name.toLowerCase().includes(state.searchTerm.toLowerCase());
+        return categoryMatch && searchMatch;
+      });
     },
     setSortBy: (state, action) => {
       state.sortBy = action.payload;
@@ -134,7 +150,9 @@ const applyFilters = (state) => {
     const searchMatch = product.name.toLowerCase().includes(state.searchTerm.toLowerCase());
     
     // Selected category filter (from main category selector)
-    const mainCategoryMatch = state.selectedCategory === 'All' || product.category === state.selectedCategory;
+    const mainCategoryMatch = state.selectedCategory === 'All' || 
+      product.category === state.selectedCategory.toLowerCase() ||
+      product.category === state.selectedCategory;
     
     return priceMatch && sizeMatch && categoryMatch && typeMatch && brandMatch && searchMatch && mainCategoryMatch;
   });
