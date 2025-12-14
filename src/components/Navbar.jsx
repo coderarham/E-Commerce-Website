@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX, FiSun, FiMoon, FiLogOut } from 'react-icons/fi';
+import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX, FiSun, FiMoon, FiLogOut, FiPackage } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { logoutUser } from '../store/authSlice';
 import { setSearchTerm } from '../store/productsSlice';
@@ -147,6 +147,14 @@ const Navbar = () => {
                     >
                       <FiUser className="w-4 h-4 mr-2" />
                       Profile
+                    </Link>
+                    <Link 
+                      to="/profile?tab=orders" 
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
+                      onClick={() => setUserDropdownOpen(false)}
+                    >
+                      <FiPackage className="w-4 h-4 mr-2" />
+                      My Orders
                     </Link>
                     <button 
                       onClick={handleLogout}

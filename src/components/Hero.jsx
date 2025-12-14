@@ -12,11 +12,11 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="pt-16 pb-8">
+    <section className="pt-16 pb-4">
       <div className="container mx-auto px-4 text-center">
-        <div className="mb-8">
-          <div className={`flex flex-wrap justify-center items-baseline gap-x-3 ${animate ? 'animate-pop-in' : 'opacity-0'}`}>
-            <h1 className="text-4xl md:text-6xl font-bold">
+        <div className="mb-4">
+          <div className={`${animate ? 'animate-pop-in' : 'opacity-0'}`}>
+            <h1 className="text-4xl md:text-6xl font-bold mb-2">
               <span className="hero-shoe">Shoe </span>
               <span className="hero-collection">Collection</span>
             </h1>

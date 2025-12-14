@@ -19,55 +19,35 @@ const StockAnalytics = () => {
     fetchStockData();
   }, []);
 
-  const fetchStockData = () => {
+  const fetchStockData = async () => {
     setLoading(true);
-    // Mock stock data with variants
-    const mockStockData = [
-      {
-        id: 1,
-        productName: 'Nike Air Max 270',
-        brand: 'Nike',
-        variants: [
-          { id: '1-red-s', color: 'Red', size: 'S', stock: 15, reorderLevel: 10 },
-          { id: '1-red-m', color: 'Red', size: 'M', stock: 8, reorderLevel: 10 },
-          { id: '1-red-l', color: 'Red', size: 'L', stock: 3, reorderLevel: 10 },
-          { id: '1-blue-s', color: 'Blue', size: 'S', stock: 20, reorderLevel: 10 },
-          { id: '1-blue-m', color: 'Blue', size: 'M', stock: 12, reorderLevel: 10 },
-          { id: '1-blue-l', color: 'Blue', size: 'L', stock: 0, reorderLevel: 10 },
-        ]
-      },
-      {
-        id: 2,
-        productName: 'Adidas Ultraboost 22',
-        brand: 'Adidas',
-        variants: [
-          { id: '2-white-m', color: 'White', size: 'M', stock: 25, reorderLevel: 15 },
-          { id: '2-white-l', color: 'White', size: 'L', stock: 18, reorderLevel: 15 },
-          { id: '2-white-xl', color: 'White', size: 'XL', stock: 5, reorderLevel: 15 },
-          { id: '2-black-m', color: 'Black', size: 'M', stock: 30, reorderLevel: 15 },
-          { id: '2-black-l', color: 'Black', size: 'L', stock: 22, reorderLevel: 15 },
-          { id: '2-black-xl', color: 'Black', size: 'XL', stock: 8, reorderLevel: 15 },
-        ]
-      },
-      {
-        id: 3,
-        productName: 'Puma RS-X',
-        brand: 'Puma',
-        variants: [
-          { id: '3-white-s', color: 'White', size: 'S', stock: 2, reorderLevel: 8 },
-          { id: '3-white-m', color: 'White', size: 'M', stock: 14, reorderLevel: 8 },
-          { id: '3-white-l', color: 'White', size: 'L', stock: 10, reorderLevel: 8 },
-          { id: '3-red-s', color: 'Red', size: 'S', stock: 0, reorderLevel: 8 },
-          { id: '3-red-m', color: 'Red', size: 'M', stock: 6, reorderLevel: 8 },
-          { id: '3-red-l', color: 'Red', size: 'L', stock: 12, reorderLevel: 8 },
-        ]
+    try {
+      // Try to fetch from localStorage products
+      const savedProducts = localStorage.getItem('products');
+      if (savedProducts) {
+        const products = JSON.parse(savedProducts);
+        // Convert products to stock data format
+        const stockData = products.map(product => ({
+          id: product.id,
+          productName: product.name,
+          brand: product.brand,
+          variants: product.sizes?.map((size, index) => ({
+            id: `${product.id}-${size}-${index}`,
+            color: product.color || 'Default',
+            size: size,
+            stock: 0, // Default stock, can be updated by admin
+            reorderLevel: 10
+          })) || []
+        }));
+        setStockData(stockData);
+      } else {
+        setStockData([]);
       }
-    ];
-    
-    setTimeout(() => {
-      setStockData(mockStockData);
-      setLoading(false);
-    }, 1000);
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+      setStockData([]);
+    }
+    setLoading(false);
   };
 
   const getStockStatus = (stock, reorderLevel) => {
@@ -212,7 +192,14 @@ const StockAnalytics = () => {
 
       {/* Stock Data by Product */}
       <div className="space-y-6">
-        {stockData.map((product, productIndex) => (
+        {stockData.length === 0 && !loading ? (
+          <div className="bg-white rounded-lg shadow p-12 text-center">
+            <FiPackage className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Found</h3>
+            <p className="text-gray-500">Add products first to manage stock levels</p>
+          </div>
+        ) : (
+          stockData.map((product, productIndex) => (
           <motion.div
             key={product.id}
             initial={{ opacity: 0, y: 20 }}
@@ -318,7 +305,8 @@ const StockAnalytics = () => {
               </div>
             </div>
           </motion.div>
-        ))}
+        ))
+        )}
       </div>
 
       {loading && (

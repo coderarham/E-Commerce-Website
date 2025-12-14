@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiHeart, FiPackage, FiEdit, FiSave, FiEye, FiDownload } from 'react-icons/fi';
 import { toast } from 'react-toastify';
@@ -8,6 +9,7 @@ import { logout } from '../store/authSlice';
 const Profile = () => {
   const { user } = useSelector(state => state.auth);
   const dispatch = useDispatch();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -25,6 +27,15 @@ const Profile = () => {
     dateOfBirth: '',
     gender: ''
   });
+
+  useEffect(() => {
+    // Check URL parameters for tab
+    const urlParams = new URLSearchParams(location.search);
+    const tab = urlParams.get('tab');
+    if (tab === 'orders') {
+      setActiveTab('orders');
+    }
+  }, [location]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
