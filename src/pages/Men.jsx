@@ -8,18 +8,42 @@ const Men = () => {
   const [searchParams] = useSearchParams();
   const [openFilters, setOpenFilters] = useState({});
   const [selectedType, setSelectedType] = useState('');
-
-
-  // Filter products for men's category
-  let menProducts = items.filter(product => product.category === 'men' || product.gender === 'men');
+  const [availableBrands, setAvailableBrands] = useState([]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
   
-  // Apply type filter if selected
-  if (selectedType) {
-    menProducts = menProducts.filter(product => 
+  const getAllBrands = () => {
+    const defaultBrands = ['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'];
+    const customBrands = JSON.parse(localStorage.getItem('customBrands') || '[]');
+    return [...defaultBrands, ...customBrands].sort();
+  };
+
+  useEffect(() => {
+    setAvailableBrands(getAllBrands());
+  }, []);
+
+  // Filter products for men's category with all filters
+  let menProducts = items.filter(product => {
+    const isMenProduct = product.category === 'men' || product.gender === 'men';
+    if (!isMenProduct) return false;
+
+    const typeMatch = !selectedType || 
       product.type === selectedType || 
-      product.category?.toLowerCase() === selectedType.toLowerCase()
-    );
-  }
+      product.category?.toLowerCase() === selectedType.toLowerCase();
+    
+    let brandMatch = selectedBrands.length === 0;
+    if (selectedBrands.length > 0) {
+      if (selectedBrands.includes('Others')) {
+        // Show products with brands not in the default list
+        const defaultBrands = ['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'];
+        const otherBrands = selectedBrands.filter(b => b !== 'Others');
+        brandMatch = !defaultBrands.includes(product.brand) || otherBrands.includes(product.brand);
+      } else {
+        brandMatch = selectedBrands.includes(product.brand);
+      }
+    }
+    
+    return typeMatch && brandMatch;
+  });
 
   useEffect(() => {
     const type = searchParams.get('type');
@@ -102,18 +126,36 @@ const Men = () => {
                 </button>
                 {openFilters.brand && (
                   <div className="mt-2 space-y-2">
-                    {['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'].map(brand => (
+                    {availableBrands.map(brand => (
                       <label key={brand} className="flex items-center space-x-2 cursor-pointer">
                         <input 
                           type="checkbox" 
+                          checked={selectedBrands.includes(brand)}
+                          onChange={() => {
+                            if (selectedBrands.includes(brand)) {
+                              setSelectedBrands(selectedBrands.filter(b => b !== brand));
+                            } else {
+                              setSelectedBrands([...selectedBrands, brand]);
+                            }
+                          }}
                           className="h-4 w-4 rounded text-accent focus:ring-accent" 
                         />
                         <span className="text-main">{brand}</span>
                       </label>
                     ))}
+                    
+                    {/* Others option */}
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input 
                         type="checkbox" 
+                        checked={selectedBrands.includes('Others')}
+                        onChange={() => {
+                          if (selectedBrands.includes('Others')) {
+                            setSelectedBrands(selectedBrands.filter(b => b !== 'Others'));
+                          } else {
+                            setSelectedBrands([...selectedBrands, 'Others']);
+                          }
+                        }}
                         className="h-4 w-4 rounded text-accent focus:ring-accent" 
                       />
                       <span className="text-main">Others</span>
@@ -145,7 +187,10 @@ const Men = () => {
 
               <div className="mt-6">
                 <button 
-                  onClick={() => setSelectedType('')}
+                  onClick={() => {
+                    setSelectedType('');
+                    setSelectedBrands([]);
+                  }}
                   className="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors font-semibold"
                 >
                   Clear Filters

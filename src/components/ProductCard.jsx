@@ -8,6 +8,44 @@ import { addToCart } from '../store/cartSlice';
 const ProductCard = ({ product }) => {
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector(state => state.auth);
+  
+  // Calculate discount percentage
+  const calculateDiscount = () => {
+
+    
+    // Check direct discount first
+    if (product.discount && !isNaN(parseFloat(product.discount))) {
+      const discount = parseFloat(product.discount);
+      if (discount > 0) return Math.round(discount);
+    }
+    
+    // Try MRP and Sale Price from admin
+    const mrp = parseFloat(product.mrp) || 0;
+    const salePrice = parseFloat(product.salePrice) || 0;
+    
+    if (mrp > 0 && salePrice > 0 && mrp > salePrice) {
+      const discount = ((mrp - salePrice) / mrp) * 100;
+      if (!isNaN(discount) && discount > 0) {
+        return Math.round(discount);
+      }
+    }
+    
+    // Fallback to original calculation
+    const originalPrice = parseFloat(product.originalPrice) || 0;
+    const currentPrice = parseFloat(product.price) || 0;
+    
+    if (originalPrice > 0 && currentPrice > 0 && originalPrice > currentPrice) {
+      const discount = ((originalPrice - currentPrice) / originalPrice) * 100;
+      if (!isNaN(discount) && discount > 0) {
+        return Math.round(discount);
+      }
+    }
+    
+    return 0;
+  };
+  
+  const discountPercent = calculateDiscount();
+  console.log('Discount percent:', discountPercent, typeof discountPercent);
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -26,7 +64,7 @@ const ProductCard = ({ product }) => {
   return (
     <div className="bg-card rounded-lg shadow-md overflow-hidden group">
       <Link to={`/product/${product._id || product.id}`}>
-        <div className="relative overflow-hidden">
+        <div className="relative overflow-hidden bg-gray-50">
           <img
             src={product.image || '/images/default-product.png'}
             alt={product.name}
@@ -35,9 +73,9 @@ const ProductCard = ({ product }) => {
               e.target.src = '/images/default-product.png';
             }}
           />
-          {product.discount && (
+          {typeof discountPercent === 'number' && discountPercent > 0 && !isNaN(discountPercent) && (
             <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-sm">
-              -{product.discount}%
+              -{discountPercent}% OFF
             </div>
           )}
         </div>

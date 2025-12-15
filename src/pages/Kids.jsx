@@ -8,18 +8,35 @@ const Kids = () => {
   const [searchParams] = useSearchParams();
   const [openFilters, setOpenFilters] = useState({});
   const [selectedType, setSelectedType] = useState('');
-
-
-  // Filter products for kids category
-  let kidsProducts = items.filter(product => product.category === 'kids' || product.gender === 'kids');
+  const [availableBrands, setAvailableBrands] = useState([]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedTypes, setSelectedTypes] = useState([]);
   
-  // Apply type filter if selected
-  if (selectedType) {
-    kidsProducts = kidsProducts.filter(product => 
+  const getAllBrands = () => {
+    const defaultBrands = ['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'];
+    const customBrands = JSON.parse(localStorage.getItem('customBrands') || '[]');
+    return [...defaultBrands, ...customBrands].sort();
+  };
+
+  useEffect(() => {
+    setAvailableBrands(getAllBrands());
+  }, []);
+
+  // Filter products for kids category with all filters
+  let kidsProducts = items.filter(product => {
+    const isKidsProduct = product.category === 'kids' || product.gender === 'kids';
+    if (!isKidsProduct) return false;
+
+    const typeMatch = (selectedTypes.length === 0 && !selectedType) || 
+      selectedTypes.includes(product.type) ||
       product.type === selectedType || 
-      product.category?.toLowerCase() === selectedType.toLowerCase()
-    );
-  }
+      product.category?.toLowerCase() === selectedType.toLowerCase();
+    
+    const brandMatch = selectedBrands.length === 0 || 
+      selectedBrands.includes(product.brand);
+    
+    return typeMatch && brandMatch;
+  });
 
   useEffect(() => {
     const type = searchParams.get('type');
@@ -99,46 +116,66 @@ const Kids = () => {
                 </button>
                 {openFilters.brand && (
                   <div className="mt-2 space-y-2">
-                    {['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'].map(brand => (
+                    {availableBrands.map(brand => (
                       <label key={brand} className="flex items-center space-x-2 cursor-pointer">
                         <input 
                           type="checkbox" 
+                          checked={selectedBrands.includes(brand)}
+                          onChange={() => {
+                            if (selectedBrands.includes(brand)) {
+                              setSelectedBrands(selectedBrands.filter(b => b !== brand));
+                            } else {
+                              setSelectedBrands([...selectedBrands, brand]);
+                            }
+                          }}
                           className="h-4 w-4 rounded text-accent focus:ring-accent" 
                         />
                         <span className="text-main">{brand}</span>
                       </label>
                     ))}
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        className="h-4 w-4 rounded text-accent focus:ring-accent" 
-                      />
-                      <span className="text-main">Others</span>
-                    </label>
+
                   </div>
                 )}
               </div>
 
               <div className="border-b border-main pb-4 mb-4">
-                <label className="block text-sm font-medium mb-2">Type</label>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="form-input text-main bg-card"
+                <button 
+                  onClick={() => toggleFilter('type')}
+                  className="w-full flex justify-between items-center font-semibold"
                 >
-                  <option value="">All Types</option>
-                  <option value="sandals">Sandals</option>
-                  <option value="flip-flops">Flip-Flops</option>
-                  <option value="boots">Boots</option>
-                  <option value="slippers">Slippers</option>
-                  <option value="sports-shoes">Sports Shoes</option>
-                  <option value="school-shoes">School Shoes</option>
-                </select>
+                  <span>Type</span>
+                  <span>{openFilters.type ? '-' : '+'}</span>
+                </button>
+                {openFilters.type && (
+                  <div className="mt-2 space-y-2">
+                    {['sandals', 'flip-flops', 'boots', 'slippers', 'sports-shoes', 'school-shoes'].map(type => (
+                      <label key={type} className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedTypes.includes(type)}
+                          onChange={() => {
+                            if (selectedTypes.includes(type)) {
+                              setSelectedTypes(selectedTypes.filter(t => t !== type));
+                            } else {
+                              setSelectedTypes([...selectedTypes, type]);
+                            }
+                          }}
+                          className="h-4 w-4 rounded text-accent focus:ring-accent" 
+                        />
+                        <span className="text-main capitalize">{type.replace('-', ' ')}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="mt-6">
                 <button 
-                  onClick={() => setSelectedType('')}
+                  onClick={() => {
+                    setSelectedType('');
+                    setSelectedBrands([]);
+                    setSelectedTypes([]);
+                  }}
                   className="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors font-semibold"
                 >
                   Clear Filters

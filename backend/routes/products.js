@@ -36,7 +36,9 @@ router.get('/', async (req, res) => {
 // Add new product with image upload
 router.post('/', upload, async (req, res) => {
   try {
-    const { name, description, price, category, brand, sizes, stock, collection, originalPrice, discount, features } = req.body;
+    const { name, description, price, category, brand, sizes, colors, stock, collection, originalPrice, discount, features, type, model } = req.body;
+    
+    console.log('Colors received:', colors);
     
     const imageUrls = [];
     
@@ -77,7 +79,10 @@ router.post('/', upload, async (req, res) => {
       price: Number(price),
       category,
       brand,
+      type,
+      model,
       sizes: JSON.parse(sizes),
+      colors: colors ? JSON.parse(colors) : [],
       image: imageUrls[0], // Main image
       images: imageUrls, // All images array
       stock: Number(stock) || 0,
@@ -101,7 +106,7 @@ router.post('/', upload, async (req, res) => {
 // Update product
 router.put('/:id', upload, async (req, res) => {
   try {
-    const { name, description, price, category, brand, sizes, stock, collection, originalPrice, discount, features } = req.body;
+    const { name, description, price, category, brand, sizes, colors, stock, collection, originalPrice, discount, features, type, model } = req.body;
     
     const updateData = {
       name,
@@ -109,7 +114,10 @@ router.put('/:id', upload, async (req, res) => {
       price: Number(price),
       category,
       brand,
+      type,
+      model,
       sizes: JSON.parse(sizes),
+      colors: colors ? JSON.parse(colors) : [],
       stock: Number(stock),
       collection: collection || 'latest',
       originalPrice: originalPrice ? Number(originalPrice) : null,

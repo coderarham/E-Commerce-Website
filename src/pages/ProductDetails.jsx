@@ -151,33 +151,60 @@ const ProductDetails = () => {
               </span>
             </div>
 
-            <div className="flex items-center mb-4">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <FiStar
-                    key={i}
-                    className={`w-5 h-5 ${
-                      i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="ml-2 text-gray-600">({product.reviews} reviews)</span>
-            </div>
+
 
             <div className="flex items-center space-x-4 mb-6">
-              <span className="text-3xl font-bold text-primary">₹{product.price || product.salePrice}</span>
-              {(product.originalPrice || product.mrp) && (
-                <>
-                  <span className="text-xl text-gray-500 line-through">₹{product.originalPrice || product.mrp}</span>
-                  <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">
-                    -{Math.round(((product.mrp - product.salePrice) / product.mrp) * 100)}% OFF
-                  </span>
-                </>
-              )}
+              {/* Selling Price */}
+              <span className="text-3xl font-bold text-primary">
+                ₹{product.price || product.salePrice}
+              </span>
+
+              {/* Discount Logic */}
+              {(() => {
+                // 1. Sahi values dhoondo (backend se jo bhi aa raha ho)
+                const original = Number(product.originalPrice || product.mrp);
+                const selling = Number(product.price || product.salePrice);
+
+                // 2. Agar Original Price exist karti hai
+                if (original) {
+                  return (
+                    <>
+                      {/* Original Price (Crossed) */}
+                      <span className="text-xl text-gray-500 line-through">
+                        ₹{original}
+                      </span>
+
+                      {/* Discount Badge Calculation */}
+                      {selling && original > selling ? (
+                        <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">
+                          {Math.round(((original - selling) / original) * 100)}% OFF
+                        </span>
+                      ) : null}
+                    </>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             <p className="text-gray-600 mb-6">{product.description}</p>
+
+            {/* Color Information */}
+            {(product.colors && Array.isArray(product.colors) && product.colors.length > 0) && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3">Available Colors</h3>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((color, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm border"
+                    >
+                      {color}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Size Selection */}
             <div className="mb-6">
@@ -231,16 +258,22 @@ const ProductDetails = () => {
                   <tbody>
                     <tr className="bg-gray-50">
                       <td className="py-2 px-3 font-medium text-gray-700">Type</td>
-                      <td className="py-2 px-3 text-gray-600">{product.type || 'Shoes'}</td>
+                      <td className="py-2 px-3 text-gray-600">{product.type}</td>
                     </tr>
                     <tr className="bg-white">
                       <td className="py-2 px-3 font-medium text-gray-700">Brand</td>
-                      <td className="py-2 px-3 text-gray-600">{product.brand || 'PUMA'}</td>
+                      <td className="py-2 px-3 text-gray-600">{product.brand}</td>
                     </tr>
                     <tr className="bg-gray-50">
                       <td className="py-2 px-3 font-medium text-gray-700">Category</td>
-                      <td className="py-2 px-3 text-gray-600">{product.category || 'men'}</td>
+                      <td className="py-2 px-3 text-gray-600">{product.category}</td>
                     </tr>
+                    {(product.colors && Array.isArray(product.colors) && product.colors.length > 0) && (
+                      <tr className="bg-white">
+                        <td className="py-2 px-3 font-medium text-gray-700">Colors</td>
+                        <td className="py-2 px-3 text-gray-600">{product.colors.join(', ')}</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

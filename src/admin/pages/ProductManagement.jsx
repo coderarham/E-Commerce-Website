@@ -15,8 +15,14 @@ const ProductManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [brandFilter, setBrandFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [models, setModels] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [customBrands, setCustomBrands] = useState([]);
+  const [showAddBrand, setShowAddBrand] = useState(false);
+  const [newBrandName, setNewBrandName] = useState('');
+  const [showBrandManager, setShowBrandManager] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -24,6 +30,8 @@ const ProductManagement = () => {
     description: '',
     mrp: '',
     salePrice: '',
+    discount: '',
+    autoCalculateDiscount: true,
     category: '',
     type: '',
     brand: '',
@@ -43,7 +51,41 @@ const ProductManagement = () => {
   useEffect(() => {
     fetchProducts();
     fetchModelsFromGoogleSheet();
+    loadCustomBrands();
   }, []);
+  
+  const loadCustomBrands = () => {
+    const savedBrands = localStorage.getItem('customBrands');
+    if (savedBrands) {
+      setCustomBrands(JSON.parse(savedBrands));
+    }
+  };
+  
+  const addNewBrand = () => {
+    if (newBrandName.trim() && !getAllBrands().includes(newBrandName.trim())) {
+      const updatedBrands = [...customBrands, newBrandName.trim()];
+      setCustomBrands(updatedBrands);
+      localStorage.setItem('customBrands', JSON.stringify(updatedBrands));
+      setFormData(prev => ({ ...prev, brand: newBrandName.trim() }));
+      setNewBrandName('');
+      setShowAddBrand(false);
+    }
+  };
+  
+  const getAllBrands = () => {
+    const defaultBrands = ['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'];
+    return [...defaultBrands, ...customBrands].sort();
+  };
+  
+  const deleteBrand = (brandToDelete) => {
+    const updatedBrands = customBrands.filter(brand => brand !== brandToDelete);
+    setCustomBrands(updatedBrands);
+    localStorage.setItem('customBrands', JSON.stringify(updatedBrands));
+    // If the deleted brand was selected, clear the selection
+    if (formData.brand === brandToDelete) {
+      setFormData(prev => ({ ...prev, brand: '' }));
+    }
+  };
 
   useEffect(() => {
     // Trigger refresh event for main app
@@ -66,7 +108,7 @@ const ProductManagement = () => {
     try {
       // In real implementation, this would be an API call to Google Sheets
       const mockModels = [
-        'Air Max', 'Air Force', 'Ultraboost', 'Stan Smith', 'Chuck Taylor',
+        'Ajanta Health', 'Air Force', 'Ultraboost', 'Stan Smith', 'Chuck Taylor',
         'Old Skool', 'Authentic', 'RS-X', 'Suede Classic'
       ];
       setModels(mockModels);
@@ -77,12 +119,26 @@ const ProductManagement = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-      // Reset type when category changes
-      ...(name === 'category' && { type: '' })
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: value,
+        // Reset type when category changes
+        ...(name === 'category' && { type: '' })
+      };
+      
+      // Auto-calculate discount when MRP or Sale Price changes
+      if ((name === 'mrp' || name === 'salePrice') && newData.autoCalculateDiscount) {
+        const mrp = parseFloat(newData.mrp) || 0;
+        const salePrice = parseFloat(newData.salePrice) || 0;
+        if (mrp > 0 && salePrice > 0) {
+          const discountPercent = Math.round(((mrp - salePrice) / mrp) * 100);
+          newData.discount = discountPercent.toString();
+        }
+      }
+      
+      return newData;
+    });
   };
 
   const getTypeOptions = (category) => {
@@ -137,6 +193,10 @@ const ProductManagement = () => {
       formDataToSend.append('brand', finalBrand);
       formDataToSend.append('model', formData.model);
       formDataToSend.append('sizes', JSON.stringify(formData.variants.sizes));
+      formDataToSend.append('colors', JSON.stringify(formData.variants.colors));
+      
+      // Debug log
+      console.log('Colors being sent:', formData.variants.colors);
       formDataToSend.append('collection', formData.collection);
       formDataToSend.append('originalPrice', formData.mrp);
       formDataToSend.append('features', JSON.stringify(['Premium quality materials', 'Comfortable fit', 'Durable construction', 'Stylish design']));
@@ -182,6 +242,8 @@ const ProductManagement = () => {
       description: '',
       mrp: '',
       salePrice: '',
+      discount: '',
+      autoCalculateDiscount: true,
       category: '',
       type: '',
       brand: '',
@@ -204,6 +266,8 @@ const ProductManagement = () => {
       description: product.description || '',
       mrp: (product.originalPrice || product.price || '').toString(),
       salePrice: (product.price || '').toString(),
+      discount: product.discount || '',
+      autoCalculateDiscount: true,
       category: product.category || '',
       type: product.type || '',
       brand: product.brand || '',
@@ -216,7 +280,7 @@ const ProductManagement = () => {
       image4: null,
       variants: {
         sizes: product.sizes || [],
-        colors: product.variants?.colors || []
+        colors: product.colors || product.variants?.colors || []
       }
     });
     setEditingProduct(product);
@@ -245,10 +309,16 @@ const ProductManagement = () => {
     }
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.brand.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.brand.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesBrand = !brandFilter || product.brand === brandFilter;
+    const matchesCategory = !categoryFilter || product.category.toLowerCase() === categoryFilter.toLowerCase();
+    return matchesSearch && matchesBrand && matchesCategory;
+  });
+
+  // Get unique brands from products
+  const uniqueBrands = [...new Set(products.map(product => product.brand))].sort();
 
   return (
     <div className="space-y-6">
@@ -265,6 +335,26 @@ const ProductManagement = () => {
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
+          <select
+            value={brandFilter}
+            onChange={(e) => setBrandFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Brands</option>
+            {uniqueBrands.map(brand => (
+              <option key={brand} value={brand}>{brand}</option>
+            ))}
+          </select>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Categories</option>
+            <option value="men">Men</option>
+            <option value="women">Women</option>
+            <option value="kids">Kids</option>
+          </select>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -316,26 +406,38 @@ const ProductManagement = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Brand
                   </label>
-                  <select
-                    name="brand"
-                    value={formData.brand}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Brand</option>
-                    <option value="PUMA">PUMA</option>
-                    <option value="Nike">Nike</option>
-                    <option value="adidas">adidas</option>
-                    <option value="Bata">Bata</option>
-                    <option value="Campus">Campus</option>
-                    <option value="Paragon">Paragon</option>
-                    <option value="Ajanta">Ajanta</option>
-                    <option value="Titas">Titas</option>
-                    <option value="Aqualite">Aqualite</option>
-                    <option value="Relaxo">Relaxo</option>
-                    <option value="Others">Others</option>
-                  </select>
+                  <div className="flex space-x-2">
+                    <select
+                      name="brand"
+                      value={formData.brand}
+                      onChange={handleInputChange}
+                      required
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Brand</option>
+                      {getAllBrands().map(brand => (
+                        <option key={brand} value={brand}>{brand}</option>
+                      ))}
+                      <option value="Others">Others</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddBrand(true)}
+                      className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
+                      title="Add New Brand"
+                    >
+                      <FiPlus />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowBrandManager(!showBrandManager)}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+                      title="Manage Brands"
+                    >
+                      <FiEdit />
+                    </button>
+                  </div>
+                  
                   {formData.brand === 'Others' && (
                     <input
                       type="text"
@@ -347,6 +449,77 @@ const ProductManagement = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2"
                     />
                   )}
+                  
+                  {showAddBrand && (
+                    <div className="mt-2 p-3 border border-gray-300 rounded-lg bg-gray-50">
+                      <div className="flex space-x-2">
+                        <input
+                          type="text"
+                          value={newBrandName}
+                          onChange={(e) => setNewBrandName(e.target.value)}
+                          placeholder="Enter new brand name"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          onKeyPress={(e) => e.key === 'Enter' && addNewBrand()}
+                        />
+                        <button
+                          type="button"
+                          onClick={addNewBrand}
+                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                          Add
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddBrand(false);
+                            setNewBrandName('');
+                          }}
+                          className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {showBrandManager && (
+                    <div className="mt-2 p-3 border border-gray-300 rounded-lg bg-gray-50">
+                      <h4 className="text-sm font-medium mb-2">Manage Brands</h4>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        <div className="text-xs text-gray-600 mb-2">Default Brands (Cannot Delete):</div>
+                        {['PUMA', 'Nike', 'adidas', 'Bata', 'Campus', 'Paragon', 'Ajanta', 'Titas', 'Aqualite', 'Relaxo'].map(brand => (
+                          <div key={brand} className="flex items-center py-1 px-2 bg-gray-100 rounded">
+                            <span className="text-sm">{brand}</span>
+                          </div>
+                        ))}
+                        {customBrands.length > 0 && (
+                          <>
+                            <div className="text-xs text-gray-600 mt-3 mb-2">Custom Brands:</div>
+                            {customBrands.map(brand => (
+                              <div key={brand} className="flex items-center justify-between py-1 px-2 bg-white rounded border">
+                                <span className="text-sm">{brand}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteBrand(brand)}
+                                  className="text-red-500 hover:text-red-700 text-sm px-2 py-1 rounded hover:bg-red-50"
+                                  title="Delete brand"
+                                >
+                                  <FiTrash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowBrandManager(false)}
+                        className="mt-2 px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -357,7 +530,6 @@ const ProductManagement = () => {
                     name="model"
                     value={formData.model}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Model</option>
@@ -411,6 +583,36 @@ const ProductManagement = () => {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Discount (%)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      name="discount"
+                      value={formData.discount}
+                      onChange={handleInputChange}
+                      disabled={formData.autoCalculateDiscount}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                    />
+                    <label className="flex items-center space-x-1 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={formData.autoCalculateDiscount}
+                        onChange={(e) => setFormData(prev => ({ ...prev, autoCalculateDiscount: e.target.checked }))}
+                        className="h-4 w-4 rounded text-blue-600"
+                      />
+                      <span>Auto</span>
+                    </label>
+                  </div>
+                  {formData.mrp && formData.salePrice && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Savings: ₹{(parseFloat(formData.mrp) - parseFloat(formData.salePrice)).toFixed(0)}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -643,12 +845,12 @@ const ProductManagement = () => {
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
                         {product.name}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-500 max-w-xs">
                         {product.description}
                       </div>
                     </div>
@@ -671,8 +873,17 @@ const ProductManagement = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div>Sizes: {product.sizes ? product.sizes.join(', ') : 'N/A'}</div>
-                    <div>Colors: {product.variants?.colors ? product.variants.colors.join(', ') : 'N/A'}</div>
+                    <div>Sizes: {Array.isArray(product.sizes) ? product.sizes.join(', ') : (typeof product.sizes === 'string' ? product.sizes : 'N/A')}</div>
+                    <div>Colors: {(() => {
+                      // Check multiple possible color field locations
+                      const colors = product.colors || product.variants?.colors || [];
+                      if (Array.isArray(colors) && colors.length > 0) {
+                        return colors.join(', ');
+                      } else if (typeof colors === 'string' && colors.trim()) {
+                        return colors;
+                      }
+                      return 'Not specified';
+                    })()}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
