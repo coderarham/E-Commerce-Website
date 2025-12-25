@@ -144,13 +144,13 @@ const Women = () => {
                   className="form-input text-main bg-card"
                 >
                   <option value="">All Types</option>
-                  <option value="sandals">Sandals</option>
-                  <option value="flip-flops">Flip-Flops</option>
-                  <option value="flats">Flats</option>
-                  <option value="heels">Heels</option>
-                  <option value="kolhapuri-chappals">Kolhapuri Chappals</option>
-                  <option value="sneakers">Sneakers</option>
-                  <option value="sports-shoes">Sports Shoes</option>
+                  <option value="Running">Running</option>
+                  <option value="Casual">Casual</option>
+                  <option value="Heels">Heels</option>
+                  <option value="Flats">Flats</option>
+                  <option value="Sneakers">Sneakers</option>
+                  <option value="Boots">Boots</option>
+                  <option value="Sandals">Sandals</option>
                 </select>
               </div>
 

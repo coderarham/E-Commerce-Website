@@ -148,7 +148,7 @@ const Kids = () => {
                 </button>
                 {openFilters.type && (
                   <div className="mt-2 space-y-2">
-                    {['sandals', 'flip-flops', 'boots', 'slippers', 'sports-shoes', 'school-shoes'].map(type => (
+                    {['School Shoes', 'Sports', 'Casual', 'Sandals', 'Sneakers', 'Canvas'].map(type => (
                       <label key={type} className="flex items-center space-x-2 cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -162,7 +162,7 @@ const Kids = () => {
                           }}
                           className="h-4 w-4 rounded text-accent focus:ring-accent" 
                         />
-                        <span className="text-main capitalize">{type.replace('-', ' ')}</span>
+                        <span className="text-main">{type}</span>
                       </label>
                     ))}
                   </div>

@@ -6,6 +6,22 @@ const OTPModal = ({ isOpen, onClose, phoneNumber, onVerify, AnimatedButton, onOr
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
+  const [currentOTP, setCurrentOTP] = useState('');
+  
+  // Generate new OTP when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      generateNewOTP();
+    }
+  }, [isOpen]);
+  
+  const generateNewOTP = () => {
+    const newOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    setCurrentOTP(newOTP);
+    console.log('Generated OTP:', newOTP); // For testing - remove in production
+    // In real app, send SMS here
+    alert(`OTP sent to +91 ${phoneNumber}: ${newOTP}`);
+  };
 
   useEffect(() => {
     if (isOpen && timer > 0) {
@@ -53,7 +69,12 @@ const OTPModal = ({ isOpen, onClose, phoneNumber, onVerify, AnimatedButton, onOr
     const otpString = otp.join('');
     if (otpString.length === 6) {
       if (!AnimatedButton) {
-        onVerify(otpString);
+        // Check against current OTP instead of hardcoded
+        if (otpString === currentOTP) {
+          onVerify(otpString);
+        } else {
+          alert('Invalid OTP. Please try again.');
+        }
       }
     }
   };
@@ -61,13 +82,28 @@ const OTPModal = ({ isOpen, onClose, phoneNumber, onVerify, AnimatedButton, onOr
   const handleAnimatedVerify = () => {
     const otpString = otp.join('');
     if (otpString.length === 6) {
-      // First verify OTP
-      onVerify(otpString);
+      // Check against current OTP instead of hardcoded
+      if (otpString === currentOTP) {
+        onVerify(otpString);
+        startAnimation();
+      } else {
+        alert('Invalid OTP. Please try again.');
+        // Clear OTP inputs
+        setOtp(['', '', '', '', '', '']);
+        // Focus first input
+        const firstInput = document.getElementById('otp-0');
+        if (firstInput) firstInput.focus();
+        return;
+      }
+    } else {
+      alert('Please enter complete 6-digit OTP');
     }
   };
 
   const startAnimation = () => {
     const button = document.querySelector('.order-button');
+    if (!button) return;
+    
     button.classList.add('animating');
     
     // Box loads after 0.5s
@@ -93,6 +129,7 @@ const OTPModal = ({ isOpen, onClose, phoneNumber, onVerify, AnimatedButton, onOr
   };
 
   const handleResend = () => {
+    generateNewOTP(); // Generate new OTP
     setTimer(30);
     setCanResend(false);
     setOtp(['', '', '', '', '', '']);

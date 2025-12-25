@@ -22,41 +22,96 @@ const UserManagement = () => {
   useEffect(() => {
     fetchUsers();
     
-    // Listen for new user registrations
+    // Listen for new user registrations and order updates
     const handleNewUser = () => {
       console.log('New user registered, refreshing user list...');
       fetchUsers();
     };
     
+    const handleOrderUpdate = () => {
+      console.log('Order updated, refreshing user list...');
+      fetchUsers();
+    };
+    
     window.addEventListener('userRegistered', handleNewUser);
+    window.addEventListener('orderStatusUpdated', handleOrderUpdate);
     
     return () => {
       window.removeEventListener('userRegistered', handleNewUser);
+      window.removeEventListener('orderStatusUpdated', handleOrderUpdate);
     };
   }, []);
 
   const fetchUsers = async () => {
     try {
-      // Use the correct API endpoint
-      const response = await fetch('http://localhost:5002/api/auth/users');
+      // Fetch users and orders
+      const [usersResponse, ordersResponse] = await Promise.all([
+        fetch('http://localhost:5002/api/auth/users'),
+        fetch('http://localhost:5002/api/orders')
+      ]);
       
-      if (response.ok) {
-        const users = await response.json();
-        console.log('Users fetched from MongoDB:', users);
+      if (usersResponse.ok) {
+        const users = await usersResponse.json();
+        const orders = ordersResponse.ok ? await ordersResponse.json() : [];
         
-        // Transform users to match the expected format
-        const transformedUsers = users.map((user) => ({
-          id: user._id,
-          name: user.name || 'Unknown User',
-          email: user.email,
-          phone: user.phone || 'Not provided',
-          accountCreated: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-          status: (user.isActive !== undefined ? user.isActive : true) ? 'active' : 'blocked',
-          totalOrders: 0,
-          totalSpent: 0,
-          lastOrderDate: 'No orders yet',
-          orders: []
-        }));
+        console.log('Users fetched from MongoDB:', users);
+        console.log('Orders fetched:', orders);
+        
+        // Calculate user statistics from orders
+        const userStats = {};
+        orders.forEach(order => {
+          const userId = order.userId?._id || order.userId;
+          if (!userStats[userId]) {
+            userStats[userId] = {
+              totalOrders: 0,
+              totalSpent: 0,
+              lastOrderDate: null,
+              orders: []
+            };
+          }
+          
+          userStats[userId].totalOrders++;
+          
+          // Only add to totalSpent if order is delivered
+          if (order.status === 'delivered') {
+            userStats[userId].totalSpent += order.total || 0;
+          }
+          
+          const orderDate = new Date(order.orderDate || order.createdAt);
+          if (!userStats[userId].lastOrderDate || orderDate > new Date(userStats[userId].lastOrderDate)) {
+            userStats[userId].lastOrderDate = orderDate.toISOString().split('T')[0];
+          }
+          
+          userStats[userId].orders.push({
+            id: order._id,
+            date: orderDate.toISOString().split('T')[0],
+            amount: order.total || 0,
+            status: order.status || 'pending'
+          });
+        });
+        
+        // Transform users with calculated statistics
+        const transformedUsers = users.map((user) => {
+          const stats = userStats[user._id] || {
+            totalOrders: 0,
+            totalSpent: 0,
+            lastOrderDate: 'No orders yet',
+            orders: []
+          };
+          
+          return {
+            id: user._id,
+            name: user.name || 'Unknown User',
+            email: user.email,
+            phone: user.phone || 'Not provided',
+            accountCreated: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            status: (user.isActive !== undefined ? user.isActive : true) ? 'active' : 'blocked',
+            totalOrders: stats.totalOrders,
+            totalSpent: stats.totalSpent,
+            lastOrderDate: stats.lastOrderDate,
+            orders: stats.orders
+          };
+        });
         
         setUsers(transformedUsers);
       } else {

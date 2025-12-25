@@ -173,15 +173,15 @@ const Men = () => {
                   className="form-input text-main bg-card"
                 >
                   <option value="">All Types</option>
-                  <option value="sandals">Sandals</option>
-                  <option value="flip-flops">Flip-Flops</option>
-                  <option value="slippers">Slippers</option>
-                  <option value="boots">Boots</option>
-                  <option value="formal-shoes">Formal Shoes</option>
-                  <option value="casual-shoes">Casual Shoes</option>
-                  <option value="loafers">Loafers</option>
-                  <option value="sneakers">Sneakers</option>
-                  <option value="sports-shoes">Sports Shoes</option>
+                  <option value="Sandals">Sandals</option>
+                  <option value="Flip-Flops">Flip-Flops</option>
+                  <option value="Slippers">Slippers</option>
+                  <option value="Boots">Boots</option>
+                  <option value="Formal Shoes">Formal Shoes</option>
+                  <option value="Casual Shoes">Casual Shoes</option>
+                  <option value="Loafers">Loafers</option>
+                  <option value="Sneakers">Sneakers</option>
+                  <option value="Sports Shoes">Sports Shoes</option>
                 </select>
               </div>
 

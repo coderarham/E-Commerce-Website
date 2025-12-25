@@ -66,17 +66,9 @@ const Checkout = () => {
   const handleOTPVerify = (otp) => {
     setLoading(true);
     
-    // Simulate OTP verification
-    setTimeout(() => {
-      if (otp === '123456') {
-        setOtpVerified(true);
-        setLoading(false);
-      } else {
-        alert('Invalid OTP. Try 123456');
-        setLoading(false);
-        setOtpVerified(false);
-      }
-    }, 1500);
+    // Simulate OTP verification - no timeout needed since validation happens in modal
+    setOtpVerified(true);
+    setLoading(false);
   };
 
   const handleOrderComplete = async () => {
