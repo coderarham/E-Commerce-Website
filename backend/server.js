@@ -15,7 +15,7 @@ const app = express();
 // CORS configuration for production
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-frontend-url.onrender.com'] // Replace with your actual frontend URL
+    ? ['https://ecommerce-frontend-b21l.onrender.com/'] // Replace with your actual frontend URL
     : ['http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
