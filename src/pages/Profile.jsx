@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { logout } from '../store/authSlice';
 import AutocompleteInput from '../components/AutocompleteInput';
 import { indianCities, indianStates } from '../data/indianCities';
+import API_BASE_URL from '../utils/api';
 
 const Profile = () => {
   const { user } = useSelector(state => state.auth);
@@ -43,7 +44,7 @@ const Profile = () => {
     const fetchUserProfile = async () => {
       if (user?.id) {
         try {
-          const response = await fetch(`http://localhost:5002/api/auth/profile/${user.id}`);
+          const response = await fetch(`${API_BASE_URL}/api/auth/profile/${user.id}`);
           if (response.ok) {
             const data = await response.json();
             const userData = data.user;
@@ -79,7 +80,7 @@ const Profile = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5002/api/orders/user/${user.id}`);
+      const response = await fetch(`${API_BASE_URL}/api/orders/user/${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setOrders(data);
@@ -111,7 +112,7 @@ const Profile = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const response = await fetch(`http://localhost:5002/api/auth/profile/${user.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/profile/${user.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
