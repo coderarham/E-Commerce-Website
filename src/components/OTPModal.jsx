@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiX, FiShield } from 'react-icons/fi';
+import API_BASE_URL from '../utils/api';
 
 const OTPModal = ({ isOpen, onClose, email, onVerify, AnimatedButton, onOrderComplete, loading, otpVerified }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -21,7 +22,7 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, AnimatedButton, onOrderCom
     
     try {
       // Send OTP via email
-      const response = await fetch('http://localhost:5002/api/email/send-otp', {
+      const response = await fetch(`${API_BASE_URL}/api/email/send-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
