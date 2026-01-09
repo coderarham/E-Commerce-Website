@@ -1,4 +1,8 @@
 // Razorpay Payment Service
+import API_BASE_URL from './api';
+
+const API_URL = `${API_BASE_URL}/api`;
+
 export const loadRazorpayScript = () => {
   return new Promise((resolve) => {
     const script = document.createElement('script');
@@ -11,7 +15,7 @@ export const loadRazorpayScript = () => {
 
 export const createRazorpayOrder = async (orderData) => {
   try {
-    const response = await fetch('http://localhost:5002/api/payment/create-order', {
+    const response = await fetch(`${API_URL}/payment/create-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,7 +36,7 @@ export const createRazorpayOrder = async (orderData) => {
 
 export const verifyPayment = async (paymentData) => {
   try {
-    const response = await fetch('http://localhost:5002/api/payment/verify', {
+    const response = await fetch(`${API_URL}/payment/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

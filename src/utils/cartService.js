@@ -1,9 +1,11 @@
-const API_BASE_URL = 'http://localhost:5002/api';
+import API_BASE_URL from './api';
+
+const API_URL = `${API_BASE_URL}/api`;
 
 export const cartService = {
   getCart: async (userId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/cart/${userId}`);
+      const response = await fetch(`${API_URL}/cart/${userId}`);
       return response.ok ? await response.json() : { items: [], totalAmount: 0 };
     } catch (error) {
       console.error('Error getting cart:', error);
@@ -21,7 +23,7 @@ export const cartService = {
         size,
         quantity: 1
       };
-      const response = await fetch(`${API_BASE_URL}/cart/add`, {
+      const response = await fetch(`${API_URL}/cart/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, item })
@@ -35,7 +37,7 @@ export const cartService = {
 
   updateQuantity: async (userId, productId, size, quantity) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/cart/update`, {
+      const response = await fetch(`${API_URL}/cart/update`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, productId, size, quantity })
@@ -49,7 +51,7 @@ export const cartService = {
 
   removeItem: async (userId, productId, size) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/cart/remove`, {
+      const response = await fetch(`${API_URL}/cart/remove`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, productId, size })
@@ -63,7 +65,7 @@ export const cartService = {
 
   clearCart: async (userId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/cart/clear/${userId}`, {
+      const response = await fetch(`${API_URL}/cart/clear/${userId}`, {
         method: 'DELETE'
       });
       return response.ok ? { items: [], totalAmount: 0 } : { items: [], totalAmount: 0 };
@@ -76,7 +78,7 @@ export const cartService = {
 
 export const clearUserCart = async (userId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/cart/clear/${userId}`, {
+    const response = await fetch(`${API_URL}/cart/clear/${userId}`, {
       method: 'DELETE'
     });
     return response.ok;

@@ -1,11 +1,13 @@
-const API_BASE_URL = 'http://localhost:5002/api';
+import API_BASE_URL from './api';
+
+const API_URL = `${API_BASE_URL}/api`;
 
 export const productService = {
   // Get all products
   getAllProducts: async () => {
     try {
       // Always try to fetch from MongoDB API first
-      const response = await fetch(`${API_BASE_URL}/products`);
+      const response = await fetch(`${API_URL}/products`);
       if (response.ok) {
         const products = await response.json();
         console.log('Loading products from MongoDB:', products.length);

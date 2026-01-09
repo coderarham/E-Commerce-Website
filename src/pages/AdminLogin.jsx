@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiShield } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { API_ENDPOINTS } from '../utils/api';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -19,7 +20,7 @@ const AdminLogin = () => {
 
     try {
       // Call backend API for admin authentication
-      const response = await fetch('http://localhost:5002/api/auth/admin-login', {
+      const response = await fetch(API_ENDPOINTS.ADMIN_LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

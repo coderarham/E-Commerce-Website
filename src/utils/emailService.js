@@ -1,9 +1,11 @@
-const API_BASE_URL = 'http://localhost:5002/api';
+import API_BASE_URL from './api';
+
+const API_URL = `${API_BASE_URL}/api`;
 
 export const emailService = {
   sendContactMessage: async (contactData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/email/contact`, {
+      const response = await fetch(`${API_URL}/email/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(contactData)
@@ -17,7 +19,7 @@ export const emailService = {
 
   sendFeedback: async (feedbackData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/email/feedback`, {
+      const response = await fetch(`${API_URL}/email/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(feedbackData)
