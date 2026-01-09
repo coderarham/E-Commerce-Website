@@ -12,11 +12,14 @@ import Footer from './components/Footer';
 import PageTransition from './components/PageTransition';
 import LoadingSpinner from './components/LoadingSpinner';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 
 // Lazy load components for better performance
 const Home = React.lazy(() => import('./pages/Home'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
+const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
+const AdminLogin = React.lazy(() => import('./pages/AdminLogin'));
 const Cart = React.lazy(() => import('./pages/Cart'));
 const ProductDetails = React.lazy(() => import('./pages/ProductDetails'));
 const Shop = React.lazy(() => import('./pages/Shop'));
@@ -124,12 +127,24 @@ function AppContent() {
                   <About />
                 </AnimatedRoute>
               } />
-              <Route path="/admin/*" element={
-                <ProtectedRoute>
+              <Route path="/admin" element={
+                <AdminProtectedRoute>
                   <AnimatedRoute>
                     <AdminPanel />
                   </AnimatedRoute>
-                </ProtectedRoute>
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/*" element={
+                <AdminProtectedRoute>
+                  <AnimatedRoute>
+                    <AdminPanel />
+                  </AnimatedRoute>
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin-login" element={
+                <AnimatedRoute>
+                  <AdminLogin />
+                </AnimatedRoute>
               } />
               <Route path="/terms" element={
                 <AnimatedRoute>
@@ -164,6 +179,11 @@ function AppContent() {
               <Route path="/signup" element={
                 <AnimatedRoute>
                   <Signup />
+                </AnimatedRoute>
+              } />
+              <Route path="/forgot-password" element={
+                <AnimatedRoute>
+                  <ForgotPassword />
                 </AnimatedRoute>
               } />
               <Route path="/checkout" element={

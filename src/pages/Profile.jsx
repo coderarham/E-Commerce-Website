@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiHeart, FiPackage, FiEdit, FiSave, FiEye, FiDownload } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { logout } from '../store/authSlice';
+import AutocompleteInput from '../components/AutocompleteInput';
+import { indianCities, indianStates } from '../data/indianCities';
 
 const Profile = () => {
   const { user } = useSelector(state => state.auth);
@@ -453,11 +455,12 @@ const Profile = () => {
                           City
                         </label>
                         {isEditing ? (
-                          <input
-                            type="text"
+                          <AutocompleteInput
                             name="address.city"
+                            placeholder="City"
                             value={profileData.address.city}
                             onChange={handleInputChange}
+                            suggestions={indianCities}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                           />
                         ) : (
@@ -472,11 +475,12 @@ const Profile = () => {
                           State
                         </label>
                         {isEditing ? (
-                          <input
-                            type="text"
+                          <AutocompleteInput
                             name="address.state"
+                            placeholder="State"
                             value={profileData.address.state}
                             onChange={handleInputChange}
+                            suggestions={indianStates}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                           />
                         ) : (

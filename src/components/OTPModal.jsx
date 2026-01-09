@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiX, FiShield } from 'react-icons/fi';
 
-const OTPModal = ({ isOpen, onClose, phoneNumber, onVerify, AnimatedButton, onOrderComplete, loading, otpVerified }) => {
+const OTPModal = ({ isOpen, onClose, email, onVerify, AnimatedButton, onOrderComplete, loading, otpVerified }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
@@ -15,12 +15,31 @@ const OTPModal = ({ isOpen, onClose, phoneNumber, onVerify, AnimatedButton, onOr
     }
   }, [isOpen]);
   
-  const generateNewOTP = () => {
+  const generateNewOTP = async () => {
     const newOTP = Math.floor(100000 + Math.random() * 900000).toString();
     setCurrentOTP(newOTP);
-    console.log('Generated OTP:', newOTP); // For testing - remove in production
-    // In real app, send SMS here
-    alert(`OTP sent to +91 ${phoneNumber}: ${newOTP}`);
+    
+    try {
+      // Send OTP via email
+      const response = await fetch('http://localhost:5002/api/email/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          otp: newOTP
+        })
+      });
+      
+      if (response.ok) {
+        console.log('OTP sent successfully to email');
+      } else {
+        console.error('Failed to send OTP');
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+    }
   };
 
   useEffect(() => {
@@ -161,7 +180,7 @@ const OTPModal = ({ isOpen, onClose, phoneNumber, onVerify, AnimatedButton, onOr
           <p className="text-gray-600 mb-2">
             We've sent a 6-digit OTP to
           </p>
-          <p className="font-semibold text-lg">+91 {phoneNumber}</p>
+          <p className="font-semibold text-lg">{email}</p>
         </div>
 
         {/* OTP Input */}

@@ -9,6 +9,7 @@ import OTPModal from '../components/OTPModal';
 import AutocompleteInput from '../components/AutocompleteInput';
 import AnimatedOrderButton from '../components/AnimatedOrderButton';
 import { indianCities, indianStates } from '../data/indianCities';
+import { initiateRazorpayPayment } from '../utils/razorpayService';
 
 const Checkout = () => {
   const { items, total } = useSelector(state => state.cart);
@@ -59,8 +60,62 @@ const Checkout = () => {
       return;
     }
     
-    // Show OTP modal instead of direct payment
-    setShowOTP(true);
+    // Handle different payment methods
+    if (formData.paymentMethod === 'cod') {
+      // For COD, show OTP modal
+      setShowOTP(true);
+    } else if (formData.paymentMethod === 'razorpay') {
+      // For Razorpay payments
+      handleRazorpayPayment();
+    }
+  };
+
+  const handleRazorpayPayment = async () => {
+    setLoading(true);
+    
+    const orderData = {
+      amount: grandTotal,
+      currency: 'INR',
+      receipt: `order_${Date.now()}`
+    };
+
+    const userInfo = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address
+    };
+
+    try {
+      await initiateRazorpayPayment(
+        orderData,
+        userInfo,
+        handlePaymentSuccess,
+        handlePaymentFailure
+      );
+    } catch (error) {
+      console.error('Payment initiation failed:', error);
+      alert('Failed to initiate payment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (response) => {
+    try {
+      // Create order in database after successful payment
+      await handleOrderComplete(response.razorpay_payment_id);
+    } catch (error) {
+      console.error('Order creation failed after payment:', error);
+      alert('Payment successful but order creation failed. Please contact support.');
+    }
+  };
+
+  const handlePaymentFailure = (error) => {
+    console.error('Payment failed:', error);
+    alert(`Payment failed: ${error}`);
+    setLoading(false);
   };
 
   const handleOTPVerify = (otp) => {
@@ -71,7 +126,7 @@ const Checkout = () => {
     setLoading(false);
   };
 
-  const handleOrderComplete = async () => {
+  const handleOrderComplete = async (paymentId = null) => {
     try {
       // Create order in database
       const orderData = {
@@ -88,6 +143,7 @@ const Checkout = () => {
           zipCode: formData.zipCode
         },
         paymentMethod: formData.paymentMethod,
+        paymentId: paymentId, // Razorpay payment ID
         subtotal: total,
         shipping: 9.99,
         tax: total * 0.08,
@@ -122,6 +178,7 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error('Order creation failed:', error);
+      throw error;
     }
   };
 
@@ -270,75 +327,31 @@ const Checkout = () => {
                     {/* Payment Method Selection */}
                     <div className="mb-6">
                       <h3 className="text-lg font-medium mb-3">Select Payment Method</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <button
                           type="button"
-                          onClick={() => setFormData({...formData, paymentMethod: 'card'})}
-                          className={`p-3 border rounded-lg text-center hover:border-primary transition ${formData.paymentMethod === 'card' ? 'border-primary bg-blue-50' : 'border-gray-300'}`}
+                          onClick={() => setFormData({...formData, paymentMethod: 'razorpay'})}
+                          className={`p-4 border rounded-lg text-center hover:border-primary transition ${formData.paymentMethod === 'razorpay' ? 'border-primary bg-blue-50' : 'border-gray-300'}`}
                         >
-                          💳 Card
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFormData({...formData, paymentMethod: 'upi'})}
-                          className={`p-3 border rounded-lg text-center ${formData.paymentMethod === 'upi' ? 'border-primary bg-blue-50' : 'border-gray-300'}`}
-                        >
-                          📱 UPI
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFormData({...formData, paymentMethod: 'googlepay'})}
-                          className={`p-3 border rounded-lg text-center ${formData.paymentMethod === 'googlepay' ? 'border-primary bg-blue-50' : 'border-gray-300'}`}
-                        >
-                          🟢 Google Pay
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFormData({...formData, paymentMethod: 'phonepe'})}
-                          className={`p-3 border rounded-lg text-center ${formData.paymentMethod === 'phonepe' ? 'border-primary bg-blue-50' : 'border-gray-300'}`}
-                        >
-                          🟣 PhonePe
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFormData({...formData, paymentMethod: 'paytm'})}
-                          className={`p-3 border rounded-lg text-center ${formData.paymentMethod === 'paytm' ? 'border-primary bg-blue-50' : 'border-gray-300'}`}
-                        >
-                          🔵 Paytm
+                          💳 Online Payment (Razorpay)
+                          <div className="text-xs text-gray-500 mt-1">Card, UPI, Wallets</div>
                         </button>
                         <button
                           type="button"
                           onClick={() => setFormData({...formData, paymentMethod: 'cod'})}
-                          className={`p-3 border rounded-lg text-center ${formData.paymentMethod === 'cod' ? 'border-primary bg-blue-50' : 'border-gray-300'}`}
+                          className={`p-4 border rounded-lg text-center hover:border-primary transition ${formData.paymentMethod === 'cod' ? 'border-primary bg-blue-50' : 'border-gray-300'}`}
                         >
                           💵 Cash on Delivery
+                          <div className="text-xs text-gray-500 mt-1">Pay when delivered</div>
                         </button>
                       </div>
                     </div>
 
-                    {/* Card Details - Only show if card is selected */}
-                    {formData.paymentMethod === 'card' && (
-                      <AnimatedCreditCard formData={formData} setFormData={setFormData} />
-                    )}
-
-                    {/* UPI ID - Only show if UPI is selected */}
-                    {formData.paymentMethod === 'upi' && (
-                      <div>
-                        <input
-                          type="text"
-                          name="upiId"
-                          placeholder="Enter UPI ID (e.g., user@paytm)"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                          required
-                        />
-                      </div>
-                    )}
-
-                    {/* Digital Wallet Message */}
-                    {['googlepay', 'phonepe', 'paytm'].includes(formData.paymentMethod) && (
+                    {/* Razorpay Payment Message */}
+                    {formData.paymentMethod === 'razorpay' && (
                       <div className="bg-blue-50 p-4 rounded-lg">
                         <p className="text-sm text-blue-700">
-                          You will be redirected to {formData.paymentMethod === 'googlepay' ? 'Google Pay' : formData.paymentMethod === 'phonepe' ? 'PhonePe' : 'Paytm'} to complete the payment.
+                          You will be redirected to Razorpay secure payment gateway. Supports all major cards, UPI, and digital wallets.
                         </p>
                       </div>
                     )}
@@ -367,7 +380,12 @@ const Checkout = () => {
                       className="flex-1 bg-primary text-white py-3 rounded-lg hover:bg-gray-800 transition font-semibold flex items-center justify-center space-x-2 disabled:opacity-50"
                     >
                       <FiLock />
-                      <span>{loading ? 'Processing...' : `Pay ₹${grandTotal.toFixed(2)}`}</span>
+                      <span>
+                        {loading ? 'Processing...' : 
+                         formData.paymentMethod === 'cod' ? `Place Order ₹${grandTotal.toFixed(2)}` :
+                         `Pay ₹${grandTotal.toFixed(2)}`
+                        }
+                      </span>
                     </button>
                   </div>
                 </form>
@@ -421,7 +439,7 @@ const Checkout = () => {
         <OTPModal
           isOpen={showOTP}
           onClose={() => setShowOTP(false)}
-          phoneNumber={formData.phone}
+          email={formData.email}
           onVerify={handleOTPVerify}
           AnimatedButton={AnimatedOrderButton}
           onOrderComplete={handleOrderComplete}

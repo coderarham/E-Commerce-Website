@@ -158,4 +158,48 @@ router.put('/users/:userId', async (req, res) => {
   }
 });
 
+// Admin login
+router.post('/admin-login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Check against environment variables
+    if (email === process.env.ADMIN_LOGIN_EMAIL && password === process.env.ADMIN_LOGIN_PASSWORD) {
+      res.json({
+        success: true,
+        message: 'Admin login successful',
+        admin: {
+          email: email,
+          isAdmin: true
+        }
+      });
+    } else {
+      res.status(401).json({ success: false, message: 'Invalid admin credentials' });
+    }
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Reset password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    user.password = newPassword;
+    await user.save();
+    
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

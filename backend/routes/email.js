@@ -115,4 +115,126 @@ router.post('/feedback', async (req, res) => {
   }
 });
 
+// OTP sending route
+router.post('/send-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Order Verification OTP - Shoe Collection',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; margin: 0; font-size: 28px;">SHOE COLLECTION</h1>
+              <p style="color: #666; margin: 5px 0 0 0;">Premium Footwear Store</p>
+            </div>
+            
+            <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Order Verification OTP</h2>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6;">Dear Customer,</p>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6;">
+              Thank you for placing an order with Shoe Collection. To complete your order, please use the following One-Time Password (OTP):
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="background-color: #f0f0f0; padding: 20px; border-radius: 8px; display: inline-block;">
+                <h1 style="color: #333; font-size: 36px; margin: 0; letter-spacing: 8px; font-family: monospace;">${otp}</h1>
+              </div>
+            </div>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6;">
+              This OTP is valid for <strong>5 minutes</strong> only. Please do not share this code with anyone for security reasons.
+            </p>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6;">
+              If you didn't request this OTP, please ignore this email or contact our support team.
+            </p>
+            
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+              <p style="color: #888; font-size: 14px; margin: 0;">
+                Thank you for choosing Shoe Collection!<br>
+                <strong>Customer Support:</strong> support@shoecollection.com
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    if (transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      await transporter.sendMail(mailOptions);
+      res.json({ success: true, message: 'OTP sent successfully' });
+    } else {
+      console.log('DEMO MODE - OTP:', { email, otp });
+      res.json({ success: true, message: 'OTP sent successfully (Demo Mode)' });
+    }
+  } catch (error) {
+    console.error('OTP email error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+  }
+});
+
+// Password reset OTP sending route
+router.post('/send-reset-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Password Reset OTP - Shoe Collection',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; margin: 0; font-size: 28px;">SHOE COLLECTION</h1>
+              <p style="color: #666; margin: 5px 0 0 0;">Premium Footwear Store</p>
+            </div>
+            
+            <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Request</h2>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6;">Dear Customer,</p>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6;">
+              We received a request to reset your password. Please use the following One-Time Password (OTP) to proceed:
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="background-color: #f0f0f0; padding: 20px; border-radius: 8px; display: inline-block;">
+                <h1 style="color: #333; font-size: 36px; margin: 0; letter-spacing: 8px; font-family: monospace;">${otp}</h1>
+              </div>
+            </div>
+            
+            <p style="color: #555; font-size: 16px; line-height: 1.6;">
+              This OTP is valid for <strong>10 minutes</strong> only. If you didn't request this password reset, please ignore this email.
+            </p>
+            
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+              <p style="color: #888; font-size: 14px; margin: 0;">
+                Thank you for choosing Shoe Collection!<br>
+                <strong>Customer Support:</strong> support@shoecollection.com
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    if (transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      await transporter.sendMail(mailOptions);
+      res.json({ success: true, message: 'Reset OTP sent successfully' });
+    } else {
+      console.log('DEMO MODE - Reset OTP:', { email, otp });
+      res.json({ success: true, message: 'Reset OTP sent successfully (Demo Mode)' });
+    }
+  } catch (error) {
+    console.error('Reset OTP email error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send reset OTP' });
+  }
+});
+
 module.exports = router;

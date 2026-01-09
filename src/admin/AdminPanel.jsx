@@ -9,8 +9,10 @@ import {
   FiBarChart2, 
   FiTrendingUp,
   FiMenu,
-  FiX
+  FiX,
+  FiLogOut
 } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 
 // Import admin pages
 import Dashboard from './pages/Dashboard';
@@ -32,6 +34,12 @@ const AdminPanel = () => {
     { id: 'stock', label: 'Stock Analytics', icon: FiBarChart2, color: 'red', path: '/admin/stock' },
     { id: 'sales', label: 'Sales Analytics', icon: FiTrendingUp, color: 'indigo', path: '/admin/sales' }
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminAuth');
+    toast.success('Logged out successfully!');
+    navigate('/admin-login');
+  };
 
   const getCurrentPageTitle = () => {
     const currentItem = menuItems.find(item => location.pathname === item.path);
@@ -99,6 +107,13 @@ const AdminPanel = () => {
             </h2>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">Welcome, Admin</span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <FiLogOut className="w-4 h-4" />
+                <span className="text-sm font-medium">Logout</span>
+              </button>
             </div>
           </div>
         </header>
@@ -107,6 +122,7 @@ const AdminPanel = () => {
         <main className="flex-1 overflow-auto p-6">
           <Routes>
             <Route path="/" element={<MainMenu />} />
+            <Route index element={<MainMenu />} />
             <Route path="/products" element={<ProductManagement />} />
             <Route path="/orders" element={<OrderManagement />} />
             <Route path="/users" element={<UserManagement />} />
