@@ -119,12 +119,6 @@ router.post('/feedback', async (req, res) => {
 router.post('/send-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
-    
-    console.log('OTP request received:', { email, otp: otp ? 'provided' : 'missing' });
-    console.log('Email config:', { 
-      user: process.env.EMAIL_USER ? 'configured' : 'missing',
-      pass: process.env.EMAIL_PASS ? 'configured' : 'missing'
-    });
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -172,21 +166,15 @@ router.post('/send-otp', async (req, res) => {
     };
 
     if (transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      console.log('Attempting to send email...');
       await transporter.sendMail(mailOptions);
-      console.log('Email sent successfully');
       res.json({ success: true, message: 'OTP sent successfully' });
     } else {
       console.log('DEMO MODE - OTP:', { email, otp });
-      // For demo purposes, always return success
-      res.json({ success: true, message: 'OTP sent successfully (Demo Mode)', demoOtp: otp });
+      res.json({ success: true, message: 'OTP sent successfully (Demo Mode)' });
     }
   } catch (error) {
     console.error('OTP email error:', error);
-    // Return demo mode response instead of error
-    const { email, otp } = req.body;
-    console.log('FALLBACK DEMO MODE - OTP:', { email, otp });
-    res.json({ success: true, message: 'OTP sent successfully (Demo Mode)', demoOtp: otp });
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
   }
 });
 
