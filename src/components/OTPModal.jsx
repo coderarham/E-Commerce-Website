@@ -33,13 +33,23 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, AnimatedButton, onOrderCom
         })
       });
       
+      const data = await response.json();
+      
       if (response.ok) {
         console.log('OTP sent successfully to email');
+        // If demo mode, show OTP to user
+        if (data.demoOtp) {
+          alert(`Demo Mode: Your OTP is ${data.demoOtp}`);
+        }
       } else {
-        console.error('Failed to send OTP');
+        console.error('Failed to send OTP:', data.message);
+        // Fallback: show OTP to user
+        alert(`Demo Mode: Your OTP is ${newOTP}`);
       }
     } catch (error) {
       console.error('Error sending OTP:', error);
+      // Fallback: show OTP to user
+      alert(`Demo Mode: Your OTP is ${newOTP}`);
     }
   };
 
