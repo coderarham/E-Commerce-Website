@@ -81,21 +81,7 @@ app.get('/api/test', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5002;
-
-// Global error handler
-process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (err) => {
-  console.error('❌ Unhandled Rejection:', err);
-  process.exit(1);
-});
-
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
   console.log('Environment:', process.env.NODE_ENV || 'development');
-  console.log('MongoDB URI configured:', !!process.env.MONGODB_URI);
-  console.log('JWT Secret configured:', !!process.env.JWT_SECRET);
 });
