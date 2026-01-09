@@ -12,7 +12,17 @@ const paymentRoutes = require('./routes/payment');
 
 const app = express();
 
-app.use(cors());
+// CORS configuration for production
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://your-frontend-url.onrender.com'] // Replace with your actual frontend URL
+    : ['http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Connect to MongoDB
@@ -35,7 +45,7 @@ app.get('/api/test', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
-  console.log('Connected to MongoDB Atlas!');
+  console.log('Environment:', process.env.NODE_ENV || 'development');
 });
