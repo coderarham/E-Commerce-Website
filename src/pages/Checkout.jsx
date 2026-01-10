@@ -160,10 +160,16 @@ const Checkout = () => {
       });
 
       if (response.ok) {
-        // Clear cart from backend
-        await fetch(`${API_BASE_URL}/api/cart/clear/${user.id}`, {
-          method: 'DELETE'
-        });
+        // Clear cart from backend (only if user.id exists)
+        if (user?.id) {
+          try {
+            await fetch(`${API_BASE_URL}/api/cart/clear/${user.id}`, {
+              method: 'DELETE'
+            });
+          } catch (cartError) {
+            console.log('Cart clear failed, but order was successful:', cartError);
+          }
+        }
         
         // Clear cart from frontend
         dispatch(clearCart());
