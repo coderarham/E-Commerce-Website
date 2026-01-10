@@ -5,14 +5,21 @@ const router = express.Router();
 // Email configuration
 let transporter;
 try {
-  transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-  console.log('Email transporter configured successfully');
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      },
+      debug: true,
+      logger: true
+    });
+    console.log('Email transporter configured successfully');
+    console.log('Email User:', process.env.EMAIL_USER);
+  } else {
+    console.log('Email credentials not found in environment variables');
+  }
 } catch (error) {
   console.log('Email configuration error:', error.message);
 }
@@ -166,10 +173,13 @@ router.post('/send-otp', async (req, res) => {
     };
 
     if (transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      console.log('Attempting to send OTP email to:', email);
       await transporter.sendMail(mailOptions);
+      console.log('OTP email sent successfully to:', email);
       res.json({ success: true, message: 'OTP sent successfully' });
     } else {
       console.log('DEMO MODE - OTP:', { email, otp });
+      console.log('Missing email credentials - EMAIL_USER:', !!process.env.EMAIL_USER, 'EMAIL_PASS:', !!process.env.EMAIL_PASS);
       res.json({ success: true, message: 'OTP sent successfully (Demo Mode)' });
     }
   } catch (error) {
