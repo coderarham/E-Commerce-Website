@@ -122,6 +122,11 @@ function AppContent() {
                   <Kids />
                 </AnimatedRoute>
               } />
+              <Route path="/categories" element={
+                <AnimatedRoute>
+                  <Shop />
+                </AnimatedRoute>
+              } />
               <Route path="/about" element={
                 <AnimatedRoute>
                   <About />
