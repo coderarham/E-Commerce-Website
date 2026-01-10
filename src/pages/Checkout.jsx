@@ -10,6 +10,7 @@ import AutocompleteInput from '../components/AutocompleteInput';
 import AnimatedOrderButton from '../components/AnimatedOrderButton';
 import { indianCities, indianStates } from '../data/indianCities';
 import { initiateRazorpayPayment } from '../utils/razorpayService';
+import API_BASE_URL from '../utils/api';
 
 const Checkout = () => {
   const { items, total } = useSelector(state => state.cart);
@@ -150,7 +151,7 @@ const Checkout = () => {
         total: total + 9.99 + (total * 0.08)
       };
 
-      const response = await fetch('http://localhost:5002/api/orders/create', {
+      const response = await fetch(`${API_BASE_URL}/api/orders/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -160,7 +161,7 @@ const Checkout = () => {
 
       if (response.ok) {
         // Clear cart from backend
-        await fetch(`http://localhost:5002/api/cart/clear/${user.id}`, {
+        await fetch(`${API_BASE_URL}/api/cart/clear/${user.id}`, {
           method: 'DELETE'
         });
         
