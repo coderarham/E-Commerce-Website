@@ -33,6 +33,8 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, AnimatedButton, onOrderCom
         })
       });
       
+      const data = await response.json();
+      
       if (response.ok) {
         console.log('OTP sent successfully to email');
       } else {

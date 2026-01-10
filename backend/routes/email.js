@@ -131,8 +131,6 @@ router.post('/send-otp', async (req, res) => {
     const { email, otp } = req.body;
     
     console.log('OTP request received for email:', email);
-    console.log('Transporter available:', !!transporter);
-    console.log('Environment check - EMAIL_USER:', !!process.env.EMAIL_USER, 'EMAIL_PASS:', !!process.env.EMAIL_PASS);
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -179,20 +177,18 @@ router.post('/send-otp', async (req, res) => {
       `
     };
 
-    if (transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      console.log('Attempting to send OTP email to:', email);
+    if (transporter) {
+      console.log('Sending OTP email to:', email);
       await transporter.sendMail(mailOptions);
-      console.log('OTP email sent successfully to:', email);
+      console.log('✅ OTP email sent successfully to:', email);
       res.json({ success: true, message: 'OTP sent successfully' });
     } else {
-      console.log('DEMO MODE - OTP:', { email, otp });
-      res.json({ success: true, message: 'OTP sent successfully (Demo Mode)', demoOtp: otp });
+      console.log('❌ Email transporter not available');
+      res.status(500).json({ success: false, message: 'Email service unavailable' });
     }
   } catch (error) {
-    console.error('OTP email error:', error.message);
-    // Return demo mode response instead of 500 error
-    const { email, otp } = req.body;
-    res.json({ success: true, message: 'OTP sent successfully (Demo Mode)', demoOtp: otp });
+    console.error('❌ OTP email error:', error.message);
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
   }
 });
 
