@@ -24,7 +24,11 @@ const app = express();
 // CORS configuration for production
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://shoe-store-cprb.onrender.com', 'https://ecommerce-shoe-store.onrender.com']
+    ? [
+        'https://shoe-store-cprb.onrender.com', 
+        'https://ecommerce-shoe-store.onrender.com',
+        'https://e-commerce-website-hazel-theta-40.vercel.app'
+      ]
     : ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
