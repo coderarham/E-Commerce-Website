@@ -129,6 +129,10 @@ router.post('/feedback', async (req, res) => {
 router.post('/send-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
+    
+    console.log('OTP request received for email:', email);
+    console.log('Transporter available:', !!transporter);
+    console.log('Environment check - EMAIL_USER:', !!process.env.EMAIL_USER, 'EMAIL_PASS:', !!process.env.EMAIL_PASS);
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -186,8 +190,18 @@ router.post('/send-otp', async (req, res) => {
       res.json({ success: true, message: 'OTP sent successfully (Demo Mode)' });
     }
   } catch (error) {
-    console.error('OTP email error:', error);
-    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+    console.error('OTP email error details:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode
+    });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send OTP',
+      error: error.message 
+    });
   }
 });
 
