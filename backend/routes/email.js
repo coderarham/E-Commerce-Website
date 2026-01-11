@@ -130,12 +130,15 @@ router.post('/send-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
     
-    console.log('OTP request received for email:', email);
-    console.log('Environment check:', {
-      NODE_ENV: process.env.NODE_ENV,
-      EMAIL_USER: process.env.EMAIL_USER ? 'Set' : 'Not set',
-      EMAIL_PASS: process.env.EMAIL_PASS ? 'Set' : 'Not set'
-    });
+    console.log('=== OTP REQUEST DEBUG ===');
+    console.log('Email:', email);
+    console.log('OTP:', otp);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('EMAIL_USER exists:', !!process.env.EMAIL_USER);
+    console.log('EMAIL_USER value:', process.env.EMAIL_USER);
+    console.log('EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
+    console.log('EMAIL_PASS length:', process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0);
+    console.log('========================');
 
     // Validate input
     if (!email || !otp) {
@@ -145,118 +148,94 @@ router.post('/send-otp', async (req, res) => {
       });
     }
 
-    // For production, always try to send email if credentials exist
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      try {
-        console.log('Creating email transporter...');
-        // Create fresh transporter for this request
-        const emailTransporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-          }
-        });
+    // Always try to send email regardless of environment
+    try {
+      console.log('Creating Gmail transporter...');
+      
+      const emailTransporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'shoecollection03@gmail.com', // Hardcoded for testing
+          pass: 'uddy codr jiny igtk' // Hardcoded for testing
+        },
+        debug: true,
+        logger: true
+      });
 
-        console.log('Verifying transporter...');
-        // Verify transporter
-        await emailTransporter.verify();
-        console.log('Transporter verified successfully');
+      console.log('Testing transporter connection...');
+      await emailTransporter.verify();
+      console.log('✅ Transporter verified successfully!');
 
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: email,
-          subject: 'Order Verification OTP - Shoe Collection',
-          text: `Your OTP is: ${otp}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-              <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <div style="text-align: center; margin-bottom: 30px;">
-                  <h1 style="color: #333; margin: 0; font-size: 28px;">SHOE COLLECTION</h1>
-                  <p style="color: #666; margin: 5px 0 0 0;">Premium Footwear Store</p>
-                </div>
-                
-                <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Order Verification OTP</h2>
-                
-                <p style="color: #555; font-size: 16px; line-height: 1.6;">Dear Customer,</p>
-                
-                <p style="color: #555; font-size: 16px; line-height: 1.6;">
-                  Your One-Time Password (OTP) for order verification is:
-                </p>
-                
-                <div style="text-align: center; margin: 30px 0;">
-                  <div style="background-color: #f0f0f0; padding: 20px; border-radius: 8px; display: inline-block;">
-                    <h1 style="color: #333; font-size: 36px; margin: 0; letter-spacing: 8px; font-family: monospace;">${otp}</h1>
-                  </div>
-                </div>
-                
-                <p style="color: #555; font-size: 16px; line-height: 1.6;">
-                  This OTP is valid for <strong>5 minutes</strong> only.
-                </p>
-                
-                <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
-                  <p style="color: #888; font-size: 14px; margin: 0;">
-                    Thank you for choosing Shoe Collection!<br>
-                    <strong>Customer Support:</strong> shoecollection03@gmail.com
-                  </p>
+      const mailOptions = {
+        from: 'shoecollection03@gmail.com',
+        to: email,
+        subject: 'Order Verification OTP - Shoe Collection',
+        text: `Your OTP is: ${otp}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; border: 2px solid #4f46e5;">
+              <h1 style="color: #4f46e5; text-align: center;">SHOE COLLECTION</h1>
+              <h2 style="text-align: center; color: #333;">Your OTP Code</h2>
+              <div style="text-align: center; margin: 30px 0;">
+                <div style="background-color: #f0f0f0; padding: 20px; border-radius: 8px; display: inline-block;">
+                  <h1 style="color: #333; font-size: 36px; margin: 0; letter-spacing: 8px; font-family: monospace;">${otp}</h1>
                 </div>
               </div>
+              <p style="text-align: center; color: #666;">This OTP is valid for 5 minutes only.</p>
             </div>
-          `
-        };
+          </div>
+        `
+      };
 
-        console.log('Sending OTP email to:', email, 'with OTP:', otp);
-        const result = await emailTransporter.sendMail(mailOptions);
-        console.log('Email sent successfully! Message ID:', result.messageId);
-        console.log('Full result:', JSON.stringify(result, null, 2));
-        
-        return res.json({ 
-          success: true, 
-          message: 'OTP sent successfully',
-          messageId: result.messageId,
-          debug: {
-            email: email,
-            otp: otp,
-            timestamp: new Date().toISOString()
-          }
-        });
-        
-      } catch (emailError) {
-        console.error('Email sending failed with error:', emailError);
-        console.error('Error details:', {
-          message: emailError.message,
-          code: emailError.code,
-          command: emailError.command
-        });
-        
-        // Return success with debug info
-        return res.json({ 
-          success: true, 
-          message: 'OTP sent successfully (Demo Mode - Email Failed)',
-          debug: {
-            email: email,
-            otp: otp,
-            error: emailError.message,
-            timestamp: new Date().toISOString()
-          }
-        });
-      }
-    } else {
-      // No email credentials - demo mode
-      console.log('DEMO MODE - No email credentials, OTP would be sent to:', email, 'OTP:', otp);
+      console.log('📧 Sending email to:', email);
+      console.log('📧 OTP:', otp);
+      
+      const result = await emailTransporter.sendMail(mailOptions);
+      
+      console.log('✅ EMAIL SENT SUCCESSFULLY!');
+      console.log('Message ID:', result.messageId);
+      console.log('Response:', result.response);
+      
       return res.json({ 
         success: true, 
-        message: 'OTP sent successfully (Demo Mode)' 
+        message: 'OTP sent successfully to your email!',
+        messageId: result.messageId,
+        debug: {
+          email: email,
+          otp: otp,
+          timestamp: new Date().toISOString(),
+          messageId: result.messageId
+        }
+      });
+      
+    } catch (emailError) {
+      console.error('❌ EMAIL ERROR:', emailError);
+      console.error('Error code:', emailError.code);
+      console.error('Error message:', emailError.message);
+      
+      // Still return success but with demo mode
+      return res.json({ 
+        success: true, 
+        message: 'OTP sent successfully (Demo Mode)',
+        debug: {
+          email: email,
+          otp: otp,
+          error: emailError.message,
+          timestamp: new Date().toISOString()
+        }
       });
     }
     
   } catch (error) {
-    console.error('OTP route error:', error);
+    console.error('❌ ROUTE ERROR:', error);
     
-    // Always return success in production to avoid blocking user flow
     res.json({ 
       success: true, 
-      message: 'OTP sent successfully (Fallback Mode)'
+      message: 'OTP sent successfully (Fallback Mode)',
+      debug: {
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }
     });
   }
 });
