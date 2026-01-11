@@ -27,7 +27,8 @@ const corsOptions = {
     ? [
         'https://shoe-store-cprb.onrender.com', 
         'https://ecommerce-shoe-store.onrender.com',
-        'https://e-commerce-website-hazel-theta-40.vercel.app'
+        'https://e-commerce-website-hazel-theta-40.vercel.app',
+        /\.vercel\.app$/
       ]
     : ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
@@ -84,8 +85,14 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'MongoDB backend working!' });
 });
 
-const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('Environment:', process.env.NODE_ENV || 'development');
-});
+// Export for Vercel
+module.exports = app;
+
+// Only listen on port if not in Vercel environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const PORT = process.env.PORT || 5002;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log('Environment:', process.env.NODE_ENV || 'development');
+  });
+}
