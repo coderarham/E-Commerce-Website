@@ -19,8 +19,12 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, AnimatedButton, onOrderCom
   const generateNewOTP = async () => {
     const newOTP = Math.floor(100000 + Math.random() * 900000).toString();
     setCurrentOTP(newOTP);
+    console.log('Generated OTP:', newOTP); // Debug log
     
     try {
+      console.log('Sending OTP to:', email); // Debug log
+      console.log('API URL:', `${API_BASE_URL}/api/email/send-otp`); // Debug log
+      
       // Send OTP via email
       const response = await fetch(`${API_BASE_URL}/api/email/send-otp`, {
         method: 'POST',
@@ -33,15 +37,20 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, AnimatedButton, onOrderCom
         })
       });
       
+      console.log('Response status:', response.status); // Debug log
       const data = await response.json();
+      console.log('Response data:', data); // Debug log
       
       if (response.ok) {
         console.log('OTP sent successfully to email');
+        alert(`OTP sent to ${email}. Check your email! (Demo OTP: ${newOTP})`); // Show OTP for testing
       } else {
-        console.error('Failed to send OTP');
+        console.error('Failed to send OTP:', data);
+        alert(`Failed to send OTP. Demo OTP: ${newOTP}`); // Show OTP for testing
       }
     } catch (error) {
       console.error('Error sending OTP:', error);
+      alert(`Error sending OTP. Demo OTP: ${newOTP}`); // Show OTP for testing
     }
   };
 
