@@ -131,6 +131,28 @@ router.post('/send-otp', async (req, res) => {
     const { email, otp } = req.body;
     
     console.log('OTP request received for email:', email);
+    console.log('Email credentials available:', {
+      EMAIL_USER: !!process.env.EMAIL_USER,
+      EMAIL_PASS: !!process.env.EMAIL_PASS,
+      transporter: !!transporter
+    });
+
+    // Validate input
+    if (!email || !otp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email and OTP are required' 
+      });
+    }
+
+    // If no transporter, return demo mode response
+    if (!transporter) {
+      console.log('DEMO MODE - OTP would be sent to:', email, 'OTP:', otp);
+      return res.json({ 
+        success: true, 
+        message: 'OTP sent successfully (Demo Mode)' 
+      });
+    }
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -169,7 +191,7 @@ router.post('/send-otp', async (req, res) => {
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
               <p style="color: #888; font-size: 14px; margin: 0;">
                 Thank you for choosing Shoe Collection!<br>
-                <strong>Customer Support:</strong> support@shoecollection.com
+                <strong>Customer Support:</strong> shoecollection03@gmail.com
               </p>
             </div>
           </div>
@@ -177,19 +199,29 @@ router.post('/send-otp', async (req, res) => {
       `
     };
 
-    if (transporter) {
-      console.log('Sending OTP email to:', email);
-      console.log('From email:', process.env.EMAIL_USER);
-      const result = await transporter.sendMail(mailOptions);
-      console.log('OTP email sent successfully:', result.messageId);
-      res.json({ success: true, message: 'OTP sent successfully' });
-    } else {
-      console.log('Email transporter not available');
-      res.status(500).json({ success: false, message: 'Email service unavailable' });
-    }
+    console.log('Attempting to send OTP email to:', email);
+    const result = await transporter.sendMail(mailOptions);
+    console.log('OTP email sent successfully:', result.messageId);
+    
+    res.json({ 
+      success: true, 
+      message: 'OTP sent successfully',
+      messageId: result.messageId 
+    });
+    
   } catch (error) {
-    console.error('OTP email error:', error.message);
-    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+    console.error('OTP email error details:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
+    });
+    
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send OTP. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
   }
 });
 
