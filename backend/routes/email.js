@@ -133,11 +133,6 @@ router.post('/send-otp', async (req, res) => {
     console.log('=== OTP REQUEST DEBUG ===');
     console.log('Email:', email);
     console.log('OTP:', otp);
-    console.log('NODE_ENV:', process.env.NODE_ENV);
-    console.log('EMAIL_USER exists:', !!process.env.EMAIL_USER);
-    console.log('EMAIL_USER value:', process.env.EMAIL_USER);
-    console.log('EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
-    console.log('EMAIL_PASS length:', process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0);
     console.log('========================');
 
     // Validate input
@@ -148,70 +143,25 @@ router.post('/send-otp', async (req, res) => {
       });
     }
 
-    // Always try to send email regardless of environment
+    // Simple direct email sending without verification
     try {
-      console.log('Creating email transporter with alternative config...');
+      console.log('Creating direct Gmail transporter...');
       
-      // Try multiple configurations
-      const configs = [
-        {
-          name: 'Gmail SMTP 587',
-          config: {
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            auth: {
-              user: 'shoecollection03@gmail.com',
-              pass: 'uddy codr jiny igtk'
-            },
-            tls: {
-              rejectUnauthorized: false
-            }
-          }
+      const emailTransporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: 'shoecollection03@gmail.com',
+          pass: 'uddy codr jiny igtk'
         },
-        {
-          name: 'Gmail Service',
-          config: {
-            service: 'gmail',
-            auth: {
-              user: 'shoecollection03@gmail.com',
-              pass: 'uddy codr jiny igtk'
-            },
-            tls: {
-              rejectUnauthorized: false
-            }
-          }
-        }
-      ];
-
-      let emailTransporter;
-      let configUsed;
-      
-      for (const { name, config } of configs) {
-        try {
-          console.log(`Trying ${name}...`);
-          emailTransporter = nodemailer.createTransport(config);
-          
-          // Test with shorter timeout
-          await Promise.race([
-            emailTransporter.verify(),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout')), 10000)
-            )
-          ]);
-          
-          console.log(`✅ ${name} verified successfully!`);
-          configUsed = name;
-          break;
-        } catch (err) {
-          console.log(`❌ ${name} failed:`, err.message);
-          continue;
-        }
-      }
-
-      if (!emailTransporter) {
-        throw new Error('All email configurations failed');
-      }
+        tls: {
+          rejectUnauthorized: false
+        },
+        connectionTimeout: 60000,
+        greetingTimeout: 30000,
+        socketTimeout: 60000
+      });
 
       const mailOptions = {
         from: 'shoecollection03@gmail.com',
@@ -234,9 +184,9 @@ router.post('/send-otp', async (req, res) => {
         `
       };
 
-      console.log(`📧 Sending email using ${configUsed} to:`, email);
-      console.log('📧 OTP:', otp);
+      console.log('📧 Attempting to send email directly...');
       
+      // Send without verification to avoid timeout
       const result = await emailTransporter.sendMail(mailOptions);
       
       console.log('✅ EMAIL SENT SUCCESSFULLY!');
@@ -249,20 +199,18 @@ router.post('/send-otp', async (req, res) => {
         debug: {
           email: email,
           otp: otp,
-          configUsed: configUsed,
+          method: 'Direct Send',
           timestamp: new Date().toISOString()
         }
       });
       
     } catch (emailError) {
-      console.error('❌ EMAIL ERROR:', emailError);
-      console.error('Error code:', emailError.code);
-      console.error('Error message:', emailError.message);
+      console.error('❌ EMAIL ERROR:', emailError.message);
       
-      // Still return success but with demo mode
+      // Return success with OTP in response for demo
       return res.json({ 
         success: true, 
-        message: 'OTP sent successfully (Demo Mode)',
+        message: `OTP: ${otp} (Email service temporarily unavailable)`,
         debug: {
           email: email,
           otp: otp,
@@ -273,11 +221,11 @@ router.post('/send-otp', async (req, res) => {
     }
     
   } catch (error) {
-    console.error('❌ ROUTE ERROR:', error);
+    console.error('❌ ROUTE ERROR:', error.message);
     
     res.json({ 
       success: true, 
-      message: 'OTP sent successfully (Fallback Mode)',
+      message: `OTP: ${req.body.otp} (Fallback Mode)`,
       debug: {
         error: error.message,
         timestamp: new Date().toISOString()
