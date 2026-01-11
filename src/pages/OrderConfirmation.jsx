@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Confetti from 'react-confetti';
 import { FiCheckCircle, FiPackage, FiTruck } from 'react-icons/fi';
 
 const OrderConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showConfetti, setShowConfetti] = useState(true);
-  const [windowDimension, setWindowDimension] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
 
   useEffect(() => {
     // Redirect if not coming from successful order
@@ -19,24 +14,13 @@ const OrderConfirmation = () => {
       navigate('/shop');
       return;
     }
-
-    const detectSize = () => {
-      setWindowDimension({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
-    window.addEventListener('resize', detectSize);
     
-    // Stop confetti after 5 seconds
+    // Stop confetti after 3 seconds
     const timer = setTimeout(() => {
       setShowConfetti(false);
-    }, 5000);
+    }, 3000);
 
-    return () => {
-      window.removeEventListener('resize', detectSize);
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [location.state, navigate]);
 
   const handleViewOrders = () => {
@@ -50,53 +34,38 @@ const OrderConfirmation = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       {showConfetti && (
-        <Confetti
-          width={windowDimension.width}
-          height={windowDimension.height}
-          recycle={false}
-          numberOfPieces={200}
-        />
+        <div className="fixed inset-0 pointer-events-none z-50">
+          <div className="animate-pulse text-6xl text-center pt-20">
+            🎉
+          </div>
+        </div>
       )}
       
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
           className="bg-white rounded-lg shadow-lg p-8 text-center"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            transition={{ duration: 0.2, type: "spring" }}
             className="mb-6"
           >
             <FiCheckCircle className="w-20 h-20 text-green-500 mx-auto" />
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-3xl font-bold text-gray-800 mb-4"
-          >
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">
             Order Placed Successfully! 🎉
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-gray-600 mb-8"
-          >
+          <p className="text-gray-600 mb-8">
             Thank you for your purchase! Your order has been confirmed and will be processed shortly.
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="bg-gray-50 rounded-lg p-6 mb-8"
-          >
+          <div className="bg-gray-50 rounded-lg p-6 mb-8">
             <h2 className="text-lg font-semibold mb-4">What happens next?</h2>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
@@ -108,14 +77,9 @@ const OrderConfirmation = () => {
                 <span className="text-sm text-gray-600">We'll send you tracking details via email</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="flex flex-col sm:flex-row gap-4"
-          >
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleViewOrders}
               className="flex-1 bg-accent text-white py-3 px-6 rounded-lg hover:bg-accent/90 transition font-semibold"
@@ -128,7 +92,7 @@ const OrderConfirmation = () => {
             >
               Continue Shopping
             </button>
-          </motion.div>
+          </div>
         </motion.div>
       </div>
     </div>

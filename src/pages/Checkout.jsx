@@ -181,9 +181,10 @@ const Checkout = () => {
         // Trigger event for admin panel to refresh orders
         window.dispatchEvent(new CustomEvent('newOrderPlaced'));
         
-        // Navigate to order confirmation with success state
+        // Navigate immediately to order confirmation
         navigate('/order-confirmation', { 
-          state: { orderSuccess: true }
+          state: { orderSuccess: true },
+          replace: true
         });
       }
     } catch (error) {

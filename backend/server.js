@@ -6,46 +6,20 @@ require('dotenv').config();
 const app = express();
 
 // CORS configuration
-const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://e-commerce-website-hazel-theta-40.vercel.app',
-    /\.vercel\.app$/
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-};
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  credentials: true
+}));
 
-app.use(cors(corsOptions));
 app.use(express.json());
 
-// MongoDB connection with error handling
-let isConnected = false;
-
-const connectDB = async () => {
-  if (isConnected) return;
-  
-  try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI not found');
-    }
-    
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-    
-    isConnected = true;
-    console.log('✅ MongoDB connected');
-  } catch (error) {
-    console.error('❌ MongoDB connection error:', error.message);
-    throw error;
-  }
-};
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -75,15 +49,7 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'Backend working!' });
 });
 
-// Middleware to connect DB before each request
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (error) {
-    res.status(500).json({ error: 'Database connection failed' });
-  }
+const PORT = process.env.PORT || 5002;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
-
-// Export for Vercel
-module.exports = app;
