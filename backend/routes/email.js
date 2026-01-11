@@ -148,21 +148,26 @@ router.post('/send-otp', async (req, res) => {
     // For production, always try to send email if credentials exist
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       try {
+        console.log('Creating email transporter...');
         // Create fresh transporter for this request
         const emailTransporter = nodemailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: 465,
-          secure: true,
+          service: 'gmail',
           auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
           }
         });
 
+        console.log('Verifying transporter...');
+        // Verify transporter
+        await emailTransporter.verify();
+        console.log('Transporter verified successfully');
+
         const mailOptions = {
           from: process.env.EMAIL_USER,
           to: email,
           subject: 'Order Verification OTP - Shoe Collection',
+          text: `Your OTP is: ${otp}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
               <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
@@ -176,7 +181,7 @@ router.post('/send-otp', async (req, res) => {
                 <p style="color: #555; font-size: 16px; line-height: 1.6;">Dear Customer,</p>
                 
                 <p style="color: #555; font-size: 16px; line-height: 1.6;">
-                  Thank you for placing an order with Shoe Collection. To complete your order, please use the following One-Time Password (OTP):
+                  Your One-Time Password (OTP) for order verification is:
                 </p>
                 
                 <div style="text-align: center; margin: 30px 0;">
@@ -186,7 +191,7 @@ router.post('/send-otp', async (req, res) => {
                 </div>
                 
                 <p style="color: #555; font-size: 16px; line-height: 1.6;">
-                  This OTP is valid for <strong>5 minutes</strong> only. Please do not share this code with anyone for security reasons.
+                  This OTP is valid for <strong>5 minutes</strong> only.
                 </p>
                 
                 <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
@@ -200,22 +205,40 @@ router.post('/send-otp', async (req, res) => {
           `
         };
 
-        console.log('Sending OTP email to:', email);
+        console.log('Sending OTP email to:', email, 'with OTP:', otp);
         const result = await emailTransporter.sendMail(mailOptions);
-        console.log('OTP email sent successfully:', result.messageId);
+        console.log('Email sent successfully! Message ID:', result.messageId);
+        console.log('Full result:', JSON.stringify(result, null, 2));
         
         return res.json({ 
           success: true, 
-          message: 'OTP sent successfully'
+          message: 'OTP sent successfully',
+          messageId: result.messageId,
+          debug: {
+            email: email,
+            otp: otp,
+            timestamp: new Date().toISOString()
+          }
         });
         
       } catch (emailError) {
-        console.error('Email sending failed:', emailError);
-        // Fallback to demo mode if email fails
-        console.log('DEMO MODE - Email failed, OTP would be sent to:', email, 'OTP:', otp);
+        console.error('Email sending failed with error:', emailError);
+        console.error('Error details:', {
+          message: emailError.message,
+          code: emailError.code,
+          command: emailError.command
+        });
+        
+        // Return success with debug info
         return res.json({ 
           success: true, 
-          message: 'OTP sent successfully (Demo Mode)' 
+          message: 'OTP sent successfully (Demo Mode - Email Failed)',
+          debug: {
+            email: email,
+            otp: otp,
+            error: emailError.message,
+            timestamp: new Date().toISOString()
+          }
         });
       }
     } else {
