@@ -150,21 +150,68 @@ router.post('/send-otp', async (req, res) => {
 
     // Always try to send email regardless of environment
     try {
-      console.log('Creating Gmail transporter...');
+      console.log('Creating email transporter with alternative config...');
       
-      const emailTransporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'shoecollection03@gmail.com', // Hardcoded for testing
-          pass: 'uddy codr jiny igtk' // Hardcoded for testing
+      // Try multiple configurations
+      const configs = [
+        {
+          name: 'Gmail SMTP 587',
+          config: {
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            auth: {
+              user: 'shoecollection03@gmail.com',
+              pass: 'uddy codr jiny igtk'
+            },
+            tls: {
+              rejectUnauthorized: false
+            }
+          }
         },
-        debug: true,
-        logger: true
-      });
+        {
+          name: 'Gmail Service',
+          config: {
+            service: 'gmail',
+            auth: {
+              user: 'shoecollection03@gmail.com',
+              pass: 'uddy codr jiny igtk'
+            },
+            tls: {
+              rejectUnauthorized: false
+            }
+          }
+        }
+      ];
 
-      console.log('Testing transporter connection...');
-      await emailTransporter.verify();
-      console.log('✅ Transporter verified successfully!');
+      let emailTransporter;
+      let configUsed;
+      
+      for (const { name, config } of configs) {
+        try {
+          console.log(`Trying ${name}...`);
+          emailTransporter = nodemailer.createTransport(config);
+          
+          // Test with shorter timeout
+          await Promise.race([
+            emailTransporter.verify(),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout')), 10000)
+            )
+          ]);
+          
+          console.log(`✅ ${name} verified successfully!`);
+          configUsed = name;
+          break;
+        } catch (err) {
+          console.log(`❌ ${name} failed:`, err.message);
+          continue;
+        }
+      }
+
+      if (!emailTransporter) {
+        throw new Error('All email configurations failed');
+      }
 
       const mailOptions = {
         from: 'shoecollection03@gmail.com',
@@ -187,14 +234,13 @@ router.post('/send-otp', async (req, res) => {
         `
       };
 
-      console.log('📧 Sending email to:', email);
+      console.log(`📧 Sending email using ${configUsed} to:`, email);
       console.log('📧 OTP:', otp);
       
       const result = await emailTransporter.sendMail(mailOptions);
       
       console.log('✅ EMAIL SENT SUCCESSFULLY!');
       console.log('Message ID:', result.messageId);
-      console.log('Response:', result.response);
       
       return res.json({ 
         success: true, 
@@ -203,8 +249,8 @@ router.post('/send-otp', async (req, res) => {
         debug: {
           email: email,
           otp: otp,
-          timestamp: new Date().toISOString(),
-          messageId: result.messageId
+          configUsed: configUsed,
+          timestamp: new Date().toISOString()
         }
       });
       
