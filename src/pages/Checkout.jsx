@@ -134,6 +134,7 @@ const Checkout = () => {
         userId: user.id,
         items: items,
         shippingAddress: {
+          fullName: `${formData.firstName} ${formData.lastName}`,
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
@@ -148,7 +149,9 @@ const Checkout = () => {
         subtotal: total,
         shipping: 9.99,
         tax: total * 0.08,
-        total: total + 9.99 + (total * 0.08)
+        total: total + 9.99 + (total * 0.08),
+        customerEmail: formData.email,
+        customerName: `${formData.firstName} ${formData.lastName}`
       };
 
       const response = await fetch(`${API_BASE_URL}/api/orders/create`, {

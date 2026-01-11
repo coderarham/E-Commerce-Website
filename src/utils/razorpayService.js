@@ -34,14 +34,19 @@ export const createRazorpayOrder = async (orderData) => {
   }
 };
 
-export const verifyPayment = async (paymentData) => {
+export const verifyPayment = async (paymentData, customerInfo = {}) => {
   try {
     const response = await fetch(`${API_URL}/payment/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify({
+        ...paymentData,
+        customerEmail: customerInfo.email,
+        customerName: customerInfo.name,
+        orderDetails: customerInfo.orderDetails
+      }),
     });
     
     if (!response.ok) {
@@ -76,11 +81,17 @@ export const initiateRazorpayPayment = async (orderData, userInfo, onSuccess, on
       order_id: order.order.id,
       handler: async function (response) {
         try {
-          // Verify payment on backend
+          // Verify payment on backend with customer info
           const verificationResult = await verifyPayment({
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
+          }, {
+            email: userInfo.email,
+            name: `${userInfo.firstName} ${userInfo.lastName}`,
+            orderDetails: {
+              total: orderData.amount / 100 // Convert back from paise
+            }
           });
 
           if (verificationResult.success) {

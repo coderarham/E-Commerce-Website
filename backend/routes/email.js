@@ -179,15 +179,16 @@ router.post('/send-otp', async (req, res) => {
 
     if (transporter) {
       console.log('Sending OTP email to:', email);
-      await transporter.sendMail(mailOptions);
-      console.log('✅ OTP email sent successfully to:', email);
+      console.log('From email:', process.env.EMAIL_USER);
+      const result = await transporter.sendMail(mailOptions);
+      console.log('OTP email sent successfully:', result.messageId);
       res.json({ success: true, message: 'OTP sent successfully' });
     } else {
-      console.log('❌ Email transporter not available');
+      console.log('Email transporter not available');
       res.status(500).json({ success: false, message: 'Email service unavailable' });
     }
   } catch (error) {
-    console.error('❌ OTP email error:', error.message);
+    console.error('OTP email error:', error.message);
     res.status(500).json({ success: false, message: 'Failed to send OTP' });
   }
 });
