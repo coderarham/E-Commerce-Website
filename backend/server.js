@@ -11,7 +11,9 @@ const corsOptions = {
     'http://localhost:3000',
     'http://localhost:3001',
     'https://e-commerce-website-hazel-theta-40.vercel.app',
-    /\.vercel\.app$/
+    'https://e-commerce-frontend-c8jg.onrender.com', // Ye wala URL add kiya hai
+    /\.vercel\.app$/,
+    /\.onrender\.com$/ // Ye optional hai, saare render domains allow karne ke liye
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
