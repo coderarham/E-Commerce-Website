@@ -5,24 +5,20 @@ const router = express.Router();
 // Email configuration
 let transporter;
 try {
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 5000,
-      socketTimeout: 10000
-    });
-    console.log('Email transporter configured successfully');
-    console.log('Email User:', process.env.EMAIL_USER);
-  } else {
-    console.log('Email credentials not found in environment variables');
-  }
+  transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: 'shoecollection03@gmail.com',
+      pass: 'uddy codr jiny igtk'
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000
+  });
+  console.log('Email transporter configured successfully');
+  console.log('Email User: shoecollection03@gmail.com');
 } catch (error) {
   console.log('Email configuration error:', error.message);
 }
@@ -34,8 +30,8 @@ router.post('/contact', async (req, res) => {
 
     // Email to admin
     const adminMailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL || 'admin@yourstore.com',
+      from: 'shoecollection03@gmail.com',
+      to: 'shoecollection03@gmail.com',
       subject: `Contact Form: ${subject}`,
       html: `
         <h2>Contact Form Submission</h2>
@@ -48,7 +44,7 @@ router.post('/contact', async (req, res) => {
 
     // Thank you email to user
     const userMailOptions = {
-      from: process.env.EMAIL_USER,
+      from: 'shoecollection03@gmail.com',
       to: email,
       subject: 'Thank you for contacting us!',
       html: `
@@ -62,7 +58,7 @@ router.post('/contact', async (req, res) => {
       `
     };
 
-    if (transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    if (transporter) {
       await transporter.sendMail(adminMailOptions);
       await transporter.sendMail(userMailOptions);
       res.json({ success: true, message: 'Message sent successfully' });
@@ -111,7 +107,7 @@ router.post('/feedback', async (req, res) => {
       `
     };
 
-    if (transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    if (transporter) {
       await transporter.sendMail(adminMailOptions);
       await transporter.sendMail(userMailOptions);
       res.json({ success: true, message: 'Feedback sent successfully' });
@@ -286,7 +282,7 @@ router.post('/send-reset-otp', async (req, res) => {
     const { email, otp } = req.body;
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: 'shoecollection03@gmail.com',
       to: email,
       subject: 'Password Reset OTP - Shoe Collection',
       html: `
@@ -326,7 +322,7 @@ router.post('/send-reset-otp', async (req, res) => {
       `
     };
 
-    if (transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    if (transporter) {
       await transporter.sendMail(mailOptions);
       res.json({ success: true, message: 'Reset OTP sent successfully' });
     } else {

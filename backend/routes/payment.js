@@ -6,17 +6,15 @@ const router = express.Router();
 
 // Email transporter setup
 let transporter;
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-  transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-}
+transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: 'shoecollection03@gmail.com',
+    pass: 'uddy codr jiny igtk'
+  }
+});
 
 // Initialize Razorpay
 const razorpay = new Razorpay({

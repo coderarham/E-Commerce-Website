@@ -5,17 +5,15 @@ const router = express.Router();
 
 // Email transporter setup
 let transporter;
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-  transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-}
+transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: 'shoecollection03@gmail.com',
+    pass: 'uddy codr jiny igtk'
+  }
+});
 
 // Create new order
 router.post('/create', async (req, res) => {
@@ -47,7 +45,7 @@ router.post('/create', async (req, res) => {
         ).join('');
         
         const mailOptions = {
-          from: process.env.EMAIL_USER,
+          from: 'shoecollection03@gmail.com',
           to: customerEmail,
           subject: `Order Confirmation #${order._id} - Shoe Collection`,
           html: `
