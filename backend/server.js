@@ -10,7 +10,7 @@ const app = express();
 ================================ */
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://e-commerce-frontend-c8jg.onrender.com'
+  'https://e-commerce-website-9p0o.onrender.com'
 ];
 
 const corsOptions = {
