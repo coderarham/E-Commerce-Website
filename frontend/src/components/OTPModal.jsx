@@ -43,11 +43,9 @@ const OTPModal = ({ isOpen, onClose, email, onVerify, AnimatedButton, onOrderCom
         const data = await response.json();
         console.log('Response data:', data); // Debug log
         console.log('OTP sent successfully to email');
-        alert(`✅ OTP sent to ${email}! Check your email. (Demo OTP: ${newOTP})`);
       } else {
         const data = await response.json();
         console.error('Failed to send OTP:', data);
-        alert(`❌ Failed to send OTP. Demo OTP: ${newOTP}`);
       }
     } catch (error) {
       console.error('Error sending OTP:', error);
