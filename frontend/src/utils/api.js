@@ -12,7 +12,7 @@ export const API_ENDPOINTS = {
   PRODUCTS: `${API_BASE_URL}/api/products`,
   CART: `${API_BASE_URL}/api/cart`,
   ORDERS: `${API_BASE_URL}/api/orders`,
-  EMAIL: `${API_BASE_URL}/api/email`,
+  EMAIL: `https://e-commerce-website-kqms.vercel.app/api/email`,
   PAYMENT: `${API_BASE_URL}/api/payment`
 };
 
